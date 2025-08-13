@@ -1,0 +1,17 @@
+[package]
+name = "mq2-uni"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "MQ2-UNI: Universal, AI-guided, fixed-dictionary tokenizer (reference encoder/decoder)"
+
+[features]
+default = []
+# blake3 = ["dep:blake3"]
+
+[dependencies]
+# blake3 = { version = "1", optional = true }
+
+[dev-dependencies]
+anyhow = "1"
+

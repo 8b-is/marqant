@@ -1,0 +1,14 @@
+mq dict-id --uni
+echo "# Title
+
+- a
+- b" | mq uni-encode | tee /tmp/demo.mquni | od -An -t x1
+cat /tmp/demo.mquni | mq uni-decode
+echo "# Title
+
+## Head
+
+Some content" | mq compress | tee /tmp/demo.mq > /dev/null
+mq inspect /tmp/demo.mq --show-tokens
+mq dict-id /tmp/demo.mq
+

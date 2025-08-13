@@ -1,0 +1,18 @@
+[package]
+name = "marqant"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Marqant - Quantum-compressed markdown utilities (.mq)"
+
+[dependencies]
+anyhow = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+flate2 = "1.0"
+base64 = "0.22"
+
+
+[[bin]]
+name = "mq"
+path = "src/main.rs"
+

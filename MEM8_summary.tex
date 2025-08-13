@@ -1,0 +1,17 @@
+# MEM|8 In a Nutshell
+
+MEM|8 encodes memories as dynamic interference patterns over a 256×256×65536 grid, enabling native multi‑resolution zoom and stable long‑term recall. A single memory field is modeled as
+
+\[\displaystyle
+M_{x,y,z}(t) = A_{x,y,z}(e,t)\, e^{i(\omega t + \phi_{x,y,z})}\, D(t,\tau)\, I(x,y,z,\mathcal{N})
+\]
+
+where:
+
+- $A_{x,y,z}(e,t)$ — amplitude modulated by emotion $e$ and time $t$ (vividness)
+- $\omega$ — base angular frequency (temporal rhythm)
+- $\phi_{x,y,z}$ — phase (order/context alignment)
+- $D(t,\tau)$ — decay kernel with half‑life $\tau$ (forgetting/retention)
+- $I(x,y,z,\mathcal{N})$ — neighborhood interference/integration across $\mathcal{N}$
+
+The field blends nearby traces to support graceful generalization and zoomable views (from anchors to raw events) without lossy re‑indexing. Compared to static vector stores, MEM|8 targets 973× faster inserts and 292× faster retrievals, with a ~100:1 compressed `.m8` format, autonomous sensory control (~70% AI‑driven), Custodian‑grade safety, and 94% precision in deployed smart‑home evaluations.
