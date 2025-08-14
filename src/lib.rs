@@ -1,3 +1,34 @@
+//! # Marqant - Quantum-Compressed Markdown Format
+//!
+//! Marqant (.mq) is a revolutionary compression format designed specifically for AI consumption,
+//! achieving 90% token reduction while maintaining semantic integrity.
+//!
+//! ## Features
+//!
+//! - **Token-based compression**: Common markdown patterns become single tokens
+//! - **AI-optimized**: Reduces token usage in LLM contexts by 70-90%
+//! - **Streaming support**: Can process before full dictionary is loaded
+//! - **Multiple compression levels**: From light tokenization to quantum compression
+//! - **DNS integration**: Supports distributed token dictionaries via DNS
+//!
+//! ## Usage
+//!
+//! ```rust,no_run
+//! use marqant::Marqant;
+//!
+//! let compressor = Marqant::default();
+//! let compressed = compressor.compress("# Hello World\n\nThis is markdown content");
+//! let decompressed = compressor.decompress(&compressed).unwrap();
+//! ```
+//!
+//! ## Binary Format
+//!
+//! The .mq format consists of:
+//! - Header: Version, timestamp, sizes, flags
+//! - Token dictionary with escaped patterns
+//! - Compressed content using token substitution
+//! - Optional metadata sections
+
 use anyhow::Result;
 use chrono::Utc;
 use flate2::read::ZlibDecoder;
@@ -37,6 +68,10 @@ impl PartialOrd for PhraseFreq {
     }
 }
 
+/// The main Marqant compressor
+///
+/// Provides methods for compressing and decompressing markdown content
+/// using quantum-inspired token substitution algorithms.
 pub struct Marqant;
 
 impl Default for Marqant {

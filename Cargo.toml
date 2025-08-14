@@ -1,6 +1,6 @@
 [package]
 name = "marqant"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["8bit-wraith", "Claude", "8b-is Team"]
 license = "MIT"
@@ -10,7 +10,7 @@ homepage = "https://github.com/8b-is/marqant"
 documentation = "https://docs.rs/marqant"
 readme = "README.md"
 keywords = ["compression", "markdown", "ai", "quantum", "mq"]
-categories = ["compression", "text-processing", "encoding"]
+categories = ["text-processing", "parser-implementations", "compression", "encoding"]
 
 [dependencies]
 anyhow = "1.0"
