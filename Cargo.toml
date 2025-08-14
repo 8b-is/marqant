@@ -2,8 +2,15 @@
 name = "marqant"
 version = "0.1.0"
 edition = "2021"
+authors = ["8bit-wraith", "Claude", "8b-is Team"]
 license = "MIT"
-description = "Marqant - Quantum-compressed markdown utilities (.mq)"
+description = "Quantum-compressed markdown format for AI consumption with 90% token reduction"
+repository = "https://github.com/8b-is/marqant"
+homepage = "https://github.com/8b-is/marqant"
+documentation = "https://docs.rs/marqant"
+readme = "README.md"
+keywords = ["compression", "markdown", "ai", "quantum", "mq"]
+categories = ["compression", "text-processing", "encoding"]
 
 [dependencies]
 anyhow = "1.0"
@@ -11,6 +18,8 @@ chrono = { version = "0.4", features = ["serde"] }
 flate2 = "1.0"
 base64 = "0.22"
 
+
+[workspace]
 
 [[bin]]
 name = "mq"

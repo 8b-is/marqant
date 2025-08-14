@@ -139,7 +139,7 @@ mq inspect <input.mq> [--show-tokens]
 - `inspect` prints parsed header fields and optional dictionary lines. It also derives a lightweight `dict_id` when dictionary lines are present.
 
 ## 11. Compatibility Notes (Informative)
-
+ 
 - Historical drafts referenced an `MQ2~...` header and a `MQ2-UNI` fixed‑dictionary variant. Those are experimental and not part of the unified MARQANT file format.
 - The `read_mq_metadata` helper remains capable of parsing such headers for inspection only.
 
