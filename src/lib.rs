@@ -40,6 +40,7 @@ use std::io::{Read, Write};
 
 pub mod dns;
 pub mod semantic;
+pub mod novelty;
 
 mod uni;
 pub use uni::{mq2_uni_decode, mq2_uni_encode, MQ2_UNI_DICT_ID};
