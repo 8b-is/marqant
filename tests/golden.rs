@@ -1,3 +1,88 @@
+#[test]
+fn test_example_md_roundtrip_all() {
+    use std::fs;
+    use std::process::{Command, Stdio};
+    use std::io::Write;
+    let dir = "example-md";
+    for entry in fs::read_dir(dir).expect("read_dir example-md") {
+        let entry = entry.expect("dir entry");
+        let path = entry.path();
+        if path.extension().map(|e| e == "md").unwrap_or(false) {
+            let filename = path.file_name().unwrap().to_string_lossy();
+            let markdown = fs::read_to_string(&path).expect("read markdown");
+            // Step 1: Encode markdown to mq (using uni-encode)
+            let mut encode = Command::new("cargo")
+                .args(["run", "--quiet", "--", "uni-encode"])
+                .stdin(Stdio::piped())
+                .stdout(Stdio::piped())
+                .spawn()
+                .expect("Failed to start mq uni-encode");
+            encode.stdin.as_mut().unwrap().write_all(markdown.as_bytes()).unwrap();
+            let encoded = encode.wait_with_output().expect("Failed to run mq uni-encode").stdout;
+            // Step 2: Decode mq back to markdown (using uni-decode)
+            let mut decode = Command::new("cargo")
+                .args(["run", "--quiet", "--", "uni-decode"])
+                .stdin(Stdio::piped())
+                .stdout(Stdio::piped())
+                .spawn()
+                .expect("Failed to start mq uni-decode");
+            decode.stdin.as_mut().unwrap().write_all(&encoded).unwrap();
+            let decoded = decode.wait_with_output().expect("Failed to run mq uni-decode").stdout;
+            let decoded_str = String::from_utf8_lossy(&decoded);
+            // Step 3: Compare original and round-tripped markdown (ignoring trailing whitespace)
+            let normalize = |s: &str| s.lines().map(str::trim_end).collect::<Vec<_>>().join("\n");
+            let orig = normalize(&markdown);
+            let roundtrip = normalize(&decoded_str);
+            if orig != roundtrip {
+                println!("\n[{}] MQ ENCODED:\n{}\n\nDECODED OUTPUT:\n{}\n", filename, String::from_utf8_lossy(&encoded), decoded_str);
+            }
+            assert_eq!(orig, roundtrip, "[{}] Round-trip markdown did not match!\nOriginal:\n{}\n\nRoundtrip:\n{}", filename, orig, roundtrip);
+        }
+    }
+}
+#[test]
+fn test_markdown_to_mq_and_back_roundtrip() {
+    use std::process::{Command, Stdio};
+    use std::io::Write;
+
+    // Sample markdown input
+    let markdown = r#"# Title
+
+- a
+- b
+
+## Head
+
+Some content
+"#;
+
+    // Step 1: Encode markdown to mq (using uni-encode)
+    let mut encode = Command::new("cargo")
+        .args(["run", "--quiet", "--", "uni-encode"])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()
+        .expect("Failed to start mq uni-encode");
+    encode.stdin.as_mut().unwrap().write_all(markdown.as_bytes()).unwrap();
+    let encoded = encode.wait_with_output().expect("Failed to run mq uni-encode").stdout;
+
+    // Step 2: Decode mq back to markdown (using uni-decode)
+    let mut decode = Command::new("cargo")
+        .args(["run", "--quiet", "--", "uni-decode"])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()
+        .expect("Failed to start mq uni-decode");
+    decode.stdin.as_mut().unwrap().write_all(&encoded).unwrap();
+    let decoded = decode.wait_with_output().expect("Failed to run mq uni-decode").stdout;
+    let decoded_str = String::from_utf8_lossy(&decoded);
+
+    // Step 3: Compare original and round-tripped markdown (ignoring trailing whitespace)
+    let normalize = |s: &str| s.lines().map(str::trim_end).collect::<Vec<_>>().join("\n");
+    let orig = normalize(markdown);
+    let roundtrip = normalize(&decoded_str);
+    assert_eq!(orig, roundtrip, "Round-trip markdown did not match!\nOriginal:\n{}\n\nRoundtrip:\n{}", orig, roundtrip);
+}
 use marqant::read_mq_metadata;
 use marqant::Marqant;
 use marqant::{mq2_uni_decode, mq2_uni_encode};
