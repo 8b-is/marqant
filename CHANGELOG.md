@@ -1,5 +1,10 @@
 # Changelog
 
+
+## [0.2.0] - 2025-08-15
+
+### Changed
+- Version bump
 ## [0.1.2] - 2024-08-14
 
 ### Fixed

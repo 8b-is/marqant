@@ -10,7 +10,7 @@ pub fn resolve_dns_dict(id: &str) -> Result<Option<HashMap<String, String>>> {
     let dig_cmd = std::env::var("MQ_DIG_CMD").unwrap_or_else(|_| "dig".to_string());
     let domain = format!("_mq.{}.mq.mem8.org", id);
     let output = std::process::Command::new(dig_cmd)
-        .args(&["+short", "TXT", &domain])
+        .args(["+short", "TXT", &domain])
         .output()
         .map_err(|e| anyhow!("Failed to execute 'dig': {}. Is it in your PATH?", e))?;
 
