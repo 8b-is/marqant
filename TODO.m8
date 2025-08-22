@@ -1,0 +1,71 @@
+# Marqant Project TODO
+# Context: Universal Language Pipeline | Parent: [↑ ../MASTER_TODO.m8] | Children: [↓ src/*/docs.m8]
+
+## 🌐 UTL Pipeline Status
+
+### Core Enforcement
+- ✅ Type-level UTL requirement (compile-time guaranteed!)
+- ✅ Raw → UTL → Human(lang) only path
+- ✅ Forbidden: Human → Human translation
+- 🔄 Adding more languages (Arabic, Hindi, Mandarin)
+
+### Document Ingestion
+- ✅ Publisher → UTL
+- ✅ PDF → UTL
+- 🔄 Word → UTL
+- ⏳ Video → UTL (needs MEM|8 video processing)
+
+### Code Migration Tools
+- ⏳ Python → UTL → Rust
+- ⏳ JavaScript → UTL → Rust  
+- ⏳ C → UTL → Rust
+- Note: LLM-based understanding, not mechanical translation
+
+## 🔮 UTL Symbol Expansions Needed
+
+### Missing Context Symbols
+- `🤷‍♂️` - Missing assumed spousal/social context
+- `⏰📍` - Temporal-spatial context marker
+- `🧩` - Partial context available
+- `🔮` - Context inference required
+
+### Programming Concepts
+- `🔧` - Function/tool
+- `📦` - Data structure
+- `🔄` - Loop/recursion
+- `❓` - Conditional
+- `❗↗️` - Error propagation
+- `🔀⚖️` - Ternary selection
+
+## 🎯 Next Steps
+
+1. **Real UTL Tokenizer**
+   - Replace placeholder with actual theoglyphic parser
+   - Handle nested concepts
+   - Support recursive symbols
+
+2. **Context Preservation**
+   - Capture "2 days after wedding" type delays
+   - Store emotional weight with symbols
+   - Track assumption chains
+
+3. **UTL-Native Rust**
+   - Replace English keywords
+   - Symbol-based syntax
+   - Maintain dual-mode compiler
+
+## 💭 Philosophy
+
+"Context is Everything" - but context includes:
+- Temporal (when said vs when happened)
+- Spatial (where were you when you heard)
+- Emotional (how important to remember)
+- Social (shared vs private knowledge)
+- Linguistic (which language/dialect/slang)
+
+All must be captured in UTL or meaning is lost!
+
+---
+Parent Context: Universal translation enforcement
+This Level: Language pipeline implementation
+Child Context: Individual translator modules
