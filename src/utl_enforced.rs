@@ -75,7 +75,7 @@ impl Translate<RawText, UtlDoc> for RawToUtl {
             if sentence.contains("i ") || sentence.contains(" i") || sentence.starts_with("i ") || sentence.contains("me") {
                 tokens.push("🙋".to_string()); // Self
             }
-            if sentence.contains("you") {
+            if sentence.contains(" you ") || sentence.starts_with("you ") || sentence.ends_with(" you") || sentence == "you" {
                 tokens.push("👤".to_string()); // Other
             }
             if sentence.contains("love") {
