@@ -64,6 +64,15 @@ pub struct RawToUtl;
 
 impl Translate<RawText, UtlDoc> for RawToUtl {
     fn translate(&self, input: RawText) -> Result<UtlDoc> {
+        // Helper function to check if a word exists with proper boundaries
+        fn contains_word(text: &str, word: &str) -> bool {
+            text.split_whitespace().any(|w| {
+                // Remove common punctuation and compare
+                let cleaned = w.trim_matches(|c: char| c.is_ascii_punctuation());
+                cleaned == word
+            })
+        }
+        
         let mut tokens = Vec::new();
         
         // Real UTL tokenization with theoglyphic symbols
@@ -87,7 +96,7 @@ impl Translate<RawText, UtlDoc> for RawToUtl {
             if sentence.contains("remember") {
                 tokens.push("💭".to_string());
             }
-            if sentence.contains("was") || sentence.contains("were") || sentence.contains("being") {
+            if contains_word(&sentence, "was") || contains_word(&sentence, "were") || contains_word(&sentence, "being") {
                 tokens.push("⏮".to_string()); // Past
             }
             if sentence.contains("is") || sentence.contains("am") || sentence.contains("are") {
@@ -350,6 +359,36 @@ mod tests {
         let meta = utl.metadata.unwrap();
         assert_eq!(meta.genre, "memoir");
         assert_eq!(meta.temporal, "past");
+    }
+    
+    #[test]
+    fn test_word_boundaries() {
+        // Test that word boundaries prevent false matches
+        // "wasp" should not match "was"
+        let utl = RawToUtl.translate(RawText("I saw a wasp".into())).unwrap();
+        assert!(!utl.tokens.contains(&"⏮".to_string()), "wasp should not match 'was'");
+        
+        // "wasn't" should not match "was"
+        let utl = RawToUtl.translate(RawText("I wasn't there".into())).unwrap();
+        assert!(!utl.tokens.contains(&"⏮".to_string()), "wasn't should not match 'was'");
+        
+        // "weren't" should not match "were"
+        let utl = RawToUtl.translate(RawText("They weren't happy".into())).unwrap();
+        assert!(!utl.tokens.contains(&"⏮".to_string()), "weren't should not match 'were'");
+        
+        // "wellbeing" should not match "being"
+        let utl = RawToUtl.translate(RawText("Your wellbeing matters".into())).unwrap();
+        assert!(!utl.tokens.contains(&"⏮".to_string()), "wellbeing should not match 'being'");
+        
+        // But actual words should still match
+        let utl = RawToUtl.translate(RawText("I was happy".into())).unwrap();
+        assert!(utl.tokens.contains(&"⏮".to_string()), "was should match");
+        
+        let utl = RawToUtl.translate(RawText("They were happy".into())).unwrap();
+        assert!(utl.tokens.contains(&"⏮".to_string()), "were should match");
+        
+        let utl = RawToUtl.translate(RawText("I am being careful".into())).unwrap();
+        assert!(utl.tokens.contains(&"⏮".to_string()), "being should match");
     }
     
     // This test WILL NOT COMPILE if uncommented:

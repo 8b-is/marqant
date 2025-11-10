@@ -303,17 +303,72 @@ impl Marqant {
             }
         }
 
-        let mut phrase_heap = BinaryHeap::new();
-        let words: Vec<&str> = content.split_whitespace().collect();
+        let mut token_counter = 0x1Bu8;
 
-        for window_size in 2..=8 {
+        // PHASE 1: Tokenize high-frequency SINGLE words FIRST
+        // This prevents phrases from blocking individual word tokens
+        let mut word_freq: HashMap<String, usize> = HashMap::new();
+        for word in tokenized.split_whitespace() {
+            // Normalize: lowercase and remove trailing punctuation for counting
+            let normalized = word.trim_end_matches(|c: char| c.is_ascii_punctuation()).to_lowercase();
+            // Must be 3+ chars and not just punctuation/whitespace
+            if normalized.len() >= 3 && normalized.chars().any(|c| c.is_alphanumeric()) {
+                *word_freq.entry(normalized).or_insert(0) += 1;
+            }
+        }
+
+        // Sort words by savings (frequency × bytes_saved)
+        let mut word_savings: Vec<(String, usize, usize)> = word_freq
+            .into_iter()
+            .filter(|(_, count)| *count >= 3)
+            .map(|(word, count)| {
+                let savings = (word.len() * count).saturating_sub(count + word.len() + 3);
+                (word, count, savings)
+            })
+            .filter(|(_, _, savings)| *savings > 0)
+            .collect();
+        word_savings.sort_by(|a, b| b.2.cmp(&a.2)); // Sort by savings descending
+
+        // Apply single-word tokens first
+        for (word, _count, _savings) in word_savings {
+            if token_counter >= 0x7F {
+                break;
+            }
+            if token_counter == 0x0A || token_counter == 0x0D {
+                token_counter += 1;
+                continue;
+            }
+
+            // Match both lowercase and capitalized versions
+            let patterns = vec![
+                word.clone(),
+                word[..1].to_uppercase() + &word[1..],
+            ];
+
+            let mut applied = false;
+            for pattern in patterns {
+                if tokenized.contains(&pattern) {
+                    let token = char::from(token_counter).to_string();
+                    tokens.insert(token.clone(), pattern.clone());
+                    tokenized = tokenized.replace(&pattern, &token);
+                    applied = true;
+                }
+            }
+
+            if applied {
+                token_counter += 1;
+            }
+        }
+
+        // PHASE 2: Now find common phrases in what remains
+        let mut phrase_heap = BinaryHeap::new();
+        let words: Vec<&str> = tokenized.split_whitespace().collect();
+        for window_size in 2..=6 {
             for i in 0..words.len().saturating_sub(window_size) {
                 let phrase = words[i..i + window_size].join(" ");
-                if phrase.len() < 8 {
-                    continue;
-                }
-                let count = content.matches(&phrase).count();
-                if count >= 2 {
+                let min_count = if phrase.len() < 8 { 4 } else { 2 };
+                let count = tokenized.matches(&phrase).count();
+                if count >= min_count {
                     let savings = (phrase.len() * count).saturating_sub(count + phrase.len() + 3);
                     if savings > 0 {
                         phrase_heap.push(PhraseFreq {
@@ -326,7 +381,6 @@ impl Marqant {
             }
         }
 
-        let mut token_counter = 0x1Bu8;
         let mut assigned_phrases: Vec<String> = Vec::new();
 
         while let Some(phrase_freq) = phrase_heap.pop() {
