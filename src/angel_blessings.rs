@@ -274,8 +274,8 @@ impl Angel {
         }
 
         // Fix list formatting
-        result = result.replace("\n* ", "\n* ");  // Ensure space after bullet
-        result = result.replace("\n- ", "\n- ");  // Ensure space after dash
+        result = result.replace("\n*", "\n* ");  // Ensure space after bullet
+        result = result.replace("\n-", "\n- ");  // Ensure space after dash
 
         result
     }
