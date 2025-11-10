@@ -210,6 +210,10 @@ impl Translate<UtlDoc, HumanText<Spa>> for UtlToHuman<Spa> {
     }
 }
 
+/// Convenience helper: Translate UTL to Spanish
+pub fn to_spanish(doc: UtlDoc) -> Result<HumanText<Spa>> {
+    UtlToHuman::<Spa>::new().translate(doc)
+}
 // ---------- FORBIDDEN paths (intentionally UNIMPLEMENTED) ----------
 // 
 // These will NEVER compile:
