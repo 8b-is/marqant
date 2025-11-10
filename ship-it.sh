@@ -59,7 +59,12 @@ echo -e "${GREEN}✅ Code formatted and linted!${NC}\n"
 
 # Step 3: Update version
 echo -e "${PURPLE}📋 Step 3: Updating version...${NC}"
-sed -i '' "s/version = \"$CURRENT_VERSION\"/version = \"$NEW_VERSION\"/" Cargo.toml
+# Cross-platform sed (works on both macOS and Linux)
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    sed -i '' "s/version = \"$CURRENT_VERSION\"/version = \"$NEW_VERSION\"/" Cargo.toml
+else
+    sed -i "s/version = \"$CURRENT_VERSION\"/version = \"$NEW_VERSION\"/" Cargo.toml
+fi
 cargo build --quiet  # Update Cargo.lock
 echo -e "${GREEN}✅ Version bumped to $NEW_VERSION${NC}\n"
 
@@ -67,14 +72,18 @@ echo -e "${GREEN}✅ Version bumped to $NEW_VERSION${NC}\n"
 echo -e "${PURPLE}📋 Step 4: Updating CHANGELOG...${NC}"
 TODAY=$(date +%Y-%m-%d)
 if [ -f CHANGELOG.md ]; then
-    # Add new version entry at the top
-    sed -i '' "3i\\
+    # Add new version entry at the top (cross-platform)
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        sed -i '' "3i\\
 \\
 ## [$NEW_VERSION] - $TODAY\\
 \\
 ### Changed\\
 - Version bump\\
 " CHANGELOG.md
+    else
+        sed -i "3i\\\\n## [$NEW_VERSION] - $TODAY\\n\\n### Changed\\n- Version bump\\n" CHANGELOG.md
+    fi
     echo -e "${GREEN}✅ CHANGELOG updated${NC}\n"
 else
     echo -e "${YELLOW}⚠️  No CHANGELOG.md found${NC}\n"
@@ -135,7 +144,11 @@ if [ "$2" == "--update-deps" ]; then
     # Update smart-tree
     if [ -d "../smart-tree" ]; then
         cd ../smart-tree
-        sed -i '' "s/marqant = \".*\"/marqant = \"$NEW_VERSION\"/" Cargo.toml
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            sed -i '' "s/marqant = \".*\"/marqant = \"$NEW_VERSION\"/" Cargo.toml
+        else
+            sed -i "s/marqant = \".*\"/marqant = \"$NEW_VERSION\"/" Cargo.toml
+        fi
         cargo update -p marqant
         git add -A
         git commit -m "Update marqant to v$NEW_VERSION"

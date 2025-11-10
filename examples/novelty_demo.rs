@@ -1,5 +1,5 @@
 use marqant::novelty::{NoveltyClass, NoveltyTracker};
-use marqant::semantic::{SemanticEncoder, SemanticUnit};
+use marqant::semantic::SemanticEncoder;
 
 fn main() {
     println!("💎 Semantic Novelty Tracking Demo");

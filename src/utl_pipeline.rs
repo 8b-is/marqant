@@ -63,21 +63,22 @@ impl UTLPipeline {
         // This is where we map English concepts to UTL symbols
         
         // Subject detection
-        if lower.contains("i ") || lower.contains("me ") {
+        if lower.contains("i ") || lower.contains(" i") || lower.starts_with("i ") ||
+           lower.contains("me ") || lower.contains(" me") || lower.ends_with("me") {
             glyphs.push("🙋"); // Self symbol
         }
-        if lower.contains("you ") {
-            glyphs.push("👤"); // Other symbol  
+        if lower.contains("you") {
+            glyphs.push("👤"); // Other symbol
         }
-        
+
         // Time markers
-        if lower.contains("was ") || lower.contains("were ") {
+        if lower.contains("was") || lower.contains("were") || lower.contains("being") {
             glyphs.push("⏮"); // Past
         }
-        if lower.contains("is ") || lower.contains("are ") {
+        if lower.contains("is ") || lower.contains("are ") || lower.contains(" am") {
             glyphs.push("⏺"); // Present
         }
-        if lower.contains("will ") {
+        if lower.contains("will") {
             glyphs.push("⏭"); // Future
         }
         
@@ -203,7 +204,7 @@ impl UTLPipeline {
     
     /// Translate UTL symbols back to English
     fn utl_to_english(utl: &str) -> Result<String> {
-        let mut english = String::new();
+        let _english = String::new();
         
         // This would be a sophisticated translator
         // For now, just map symbols back to words
@@ -281,7 +282,7 @@ pub fn process_document(raw: &[u8], output_language: &str) -> Result<String> {
     let utl = UTLPipeline::translate_to_utl(&text)?;
     
     // Step 3: Analyze the UTL (not the original text!)
-    let analysis = UTLPipeline::analyze_utl(&utl)?;
+    let _analysis = UTLPipeline::analyze_utl(&utl)?;
     
     // Step 4: Store in MEM|8 (would happen here)
     // let wave = mem8::store_utl(&utl, &analysis)?;
