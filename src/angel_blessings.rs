@@ -260,8 +260,16 @@ impl Angel {
         }
 
         // Fix broken wikilinks [[link ]] -> [[link]]
+        let prev_result = result.clone();
         result = result.replace("]] ", "]]");
+        if result != prev_result {
+            stats.blessings_applied += 1;
+        }
+        let prev_result = result.clone();
         result = result.replace(" [[", "[[");
+        if result != prev_result {
+            stats.blessings_applied += 1;
+        }
 
         // Fix heading spacing: ensure single space after #
         for i in 1..=6 {
