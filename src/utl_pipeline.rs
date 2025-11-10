@@ -75,7 +75,8 @@ impl UTLPipeline {
         if lower.contains("was") || lower.contains("were") || lower.contains("being") {
             glyphs.push("⏮"); // Past
         }
-        if lower.contains("is ") || lower.contains("are ") || lower.contains(" am") {
+        if lower.contains("is ") || lower.contains("are ") ||
+           lower.contains(" am ") || lower.starts_with("am ") || lower.ends_with(" am") {
             glyphs.push("⏺"); // Present
         }
         if lower.contains("will") {
