@@ -208,10 +208,10 @@ impl Angel {
         let mut result = text.to_string();
 
         // Fix double spaces -> single space
-        let original_len = result.len();
+        let double_space_count = result.matches("  ").count();
         result = result.replace("  ", " ");
-        if result.len() != original_len {
-            stats.blessings_applied += 1;
+        if double_space_count > 0 {
+            stats.blessings_applied += double_space_count;
         }
 
         // Fix common typos
