@@ -64,7 +64,7 @@ impl UTLPipeline {
         
         // Subject detection
         if lower.contains("i ") || lower.contains(" i") || lower.starts_with("i ") ||
-           lower.contains("me ") || lower.contains(" me") || lower.ends_with("me") {
+           lower.contains("me ") || lower.contains(" me") || lower.starts_with("me ") || lower.ends_with(" me") {
             glyphs.push("🙋"); // Self symbol
         }
         if lower.contains(" you ") || lower.starts_with("you ") || lower.ends_with(" you") {
