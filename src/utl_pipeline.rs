@@ -79,7 +79,7 @@ impl UTLPipeline {
            lower.contains(" am ") || lower.starts_with("am ") || lower.ends_with(" am") {
             glyphs.push("⏺"); // Present
         }
-        if lower.contains("will") {
+        if lower.contains(" will ") || lower.starts_with("will ") || lower.ends_with(" will") {
             glyphs.push("⏭"); // Future
         }
         
