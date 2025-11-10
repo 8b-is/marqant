@@ -67,7 +67,7 @@ impl UTLPipeline {
            lower.contains("me ") || lower.contains(" me") || lower.ends_with("me") {
             glyphs.push("🙋"); // Self symbol
         }
-        if lower.contains("you") {
+        if lower.contains(" you ") || lower.starts_with("you ") || lower.ends_with(" you") {
             glyphs.push("👤"); // Other symbol
         }
 
