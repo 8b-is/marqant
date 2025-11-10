@@ -230,10 +230,26 @@ impl Angel {
         }
 
         // Fix space before punctuation
+        let before = result.clone();
         result = result.replace(" .", ".");
+        if result != before {
+            stats.blessings_applied += 1;
+        }
+        let before = result.clone();
         result = result.replace(" ,", ",");
+        if result != before {
+            stats.blessings_applied += 1;
+        }
+        let before = result.clone();
         result = result.replace(" !", "!");
+        if result != before {
+            stats.blessings_applied += 1;
+        }
+        let before = result.clone();
         result = result.replace(" ?", "?");
+        if result != before {
+            stats.blessings_applied += 1;
+        }
 
         result
     }
