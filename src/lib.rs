@@ -46,6 +46,7 @@ pub mod utl_pipeline;
 pub mod utl_enforced;
 pub mod utl_phonetics;
 pub mod mem8_bridge;
+pub mod angel_blessings;
 
 mod uni;
 pub use uni::{mq2_uni_decode, mq2_uni_encode, MQ2_UNI_DICT_ID};

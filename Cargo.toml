@@ -31,3 +31,11 @@ mem8 = []
 name = "mq"
 path = "src/main.rs"
 
+[[bin]]
+name = "demon_compressor"
+path = "src/bin/demon_compressor.rs"
+
+[[bin]]
+name = "angel_decompressor"
+path = "src/bin/angel_decompressor.rs"
+

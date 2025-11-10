@@ -101,6 +101,93 @@ mq compress doc.md --std dns:marqant.8b.is
 mq compress huge.md --max-tokens 200
 ```
 
+## 😈👼 Angels & Demons: The Duality of Compression
+
+**A revolutionary approach to compression with thermodynamic blessing levels!**
+
+### The Philosophy
+
+```
+Demons sort the chaos, reducing entropy's reign
+Angels bless the output, adding variance again
+Together they create a cycle, neither good nor bad
+Just information dancing, making Maxwell glad
+```
+
+### The Technical Duality
+
+- **DEMONS** 😈: Compress by finding patterns and removing redundancy (order from chaos)
+- **ANGELS** 👼: Decompress with divine interpretation, adding blessed variations (blessed chaos from order)
+
+### Blessing Levels
+
+#### Level 0: STRICT (No Angels)
+Pure demon output. Bit-perfect reconstruction for Hutter Prize competition.
+```bash
+demon_compressor enwik9 archive9.mq
+angel_decompressor archive9.mq enwik9_restored 0
+```
+
+#### Level 1: MINOR BLESSINGS
+Fix typos, double spaces, and obvious errors:
+```bash
+angel_decompressor archive.mq output.txt 1
+# Fixes: "teh" → "the", "  " → " "
+```
+
+#### Level 2: HARMONY
+Wikipedia structure fixes and harmonization:
+```bash
+angel_decompressor wiki.mq clean_wiki.xml 2
+# Fixes: "[[category:]]" → "[[Category:]]", template formatting
+```
+
+#### Level 3: CREATIVE
+Training data augmentation with semantic variations:
+```bash
+angel_decompressor data.mq training.txt 3
+# Creates variations for robust ML training
+```
+
+### Thermodynamics
+
+Each blessing adds **kT·ln(2) joules** of interpretive energy:
+
+- **Compression**: Demons extract energy as entropy decreases
+- **Decompression**: Angels add energy as controlled randomness increases
+- **The Cycle**: Information perpetual motion (almost!)
+
+### Use Cases
+
+| Mode | Blessing Level | Use Case |
+|------|---------------|----------|
+| 😈→👼(0) | Strict | Hutter Prize competition (bit-perfect) |
+| 😈→👼(1) | Minor | Clean personal documents |
+| 😈→👼(2) | Harmony | Production Wikipedia dumps |
+| 😈→👼(3) | Creative | ML training data generation |
+
+### Quick Start
+
+```bash
+# Install
+cargo install marqant
+
+# Compress with Demon
+demon_compressor document.md compressed.mq
+
+# Decompress with Angel (choose your blessing level)
+angel_decompressor compressed.mq clean.md 2  # Harmony mode
+```
+
+### Demo
+
+Run the included demo to see all blessing levels in action:
+```bash
+./demo_angels_demons.sh
+```
+
+---
+
 ## 🔧 Library Usage
 
 ### Rust Integration
