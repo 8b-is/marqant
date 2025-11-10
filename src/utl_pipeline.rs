@@ -63,7 +63,7 @@ impl UTLPipeline {
         // This is where we map English concepts to UTL symbols
         
         // Subject detection
-        if lower.contains("i ") || lower.contains(" i") || lower.starts_with("i ") ||
+        if lower.contains(" i ") || lower.starts_with("i ") || lower.ends_with(" i") ||
            lower.contains("me ") || lower.contains(" me") || lower.starts_with("me ") || lower.ends_with(" me") {
             glyphs.push("🙋"); // Self symbol
         }
