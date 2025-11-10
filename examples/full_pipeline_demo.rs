@@ -8,7 +8,7 @@
 //! 5. Recall similar memories
 
 use marqant::{
-    utl_enforced::{RawToUtl, UtlToHuman, Translate, RawText, UtlDoc, HumanText, Eng, Jpn, Spa},
+    utl_enforced::{RawToUtl, UtlToHuman, Translate, RawText, UtlDoc, Eng, Jpn, Spa},
     utl_phonetics::{encode_compact, decode_compact},
     mem8_bridge::{WaveMemory, ConsciousnessStream, InMemoryStore},
 };
@@ -43,10 +43,10 @@ fn main() {
         // Step 2: Translate to UTL (type-enforced!)
         let translator = RawToUtl;
         let utl_doc = translator.translate(raw).unwrap();
-        println!("  🔮 UTL: {} symbols", utl_doc.symbols.len());
-        
+        println!("  🔮 UTL: {} symbols", utl_doc.tokens.len());
+
         // Step 3: Convert to phonetic packets
-        let symbols: Vec<&str> = utl_doc.symbols.iter()
+        let symbols: Vec<&str> = utl_doc.tokens.iter()
             .map(|s| s.as_str())
             .collect();
         let packets = encode_compact(&symbols);
@@ -62,10 +62,10 @@ fn main() {
         let wave_sample: Vec<String> = memory.wave_pattern.iter()
             .take(8)
             .map(|&v| {
-                if v > 0.5 { "▲" }
-                else if v > 0.0 { "▬" }
-                else if v > -0.5 { "▭" }
-                else { "▼" }
+                if v > 0.5 { "▲".to_string() }
+                else if v > 0.0 { "▬".to_string() }
+                else if v > -0.5 { "▭".to_string() }
+                else { "▼".to_string() }
             })
             .collect();
         println!("  📊 Wave: {}", wave_sample.join(""));
@@ -107,13 +107,14 @@ fn main() {
     
     // Demonstrate UTL as universal intermediate
     let utl_love = UtlDoc {
-        symbols: vec!["🙋".into(), "❤️".into(), "👤".into(), "⧖".into()],
+        tokens: vec!["🙋".into(), "❤️".into(), "👤".into(), "⧖".into()],
+        metadata: None,
     };
-    
+
     // Translate to different languages (all through UTL!)
-    let to_english = UtlToHuman::<Eng>::default();
-    let to_japanese = UtlToHuman::<Jpn>::default();
-    let to_spanish = UtlToHuman::<Spa>::default();
+    let to_english = UtlToHuman::<Eng>::new();
+    let to_japanese = UtlToHuman::<Jpn>::new();
+    let to_spanish = UtlToHuman::<Spa>::new();
     
     let english = to_english.translate(utl_love.clone()).unwrap();
     let japanese = to_japanese.translate(utl_love.clone()).unwrap();

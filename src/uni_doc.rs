@@ -2,7 +2,6 @@
 //! 
 //! Transforms any document into UTL format with full context preservation
 
-use anyhow::Result;
 
 /// Document types that affect interpretation
 #[derive(Debug, Clone)]
@@ -147,7 +146,7 @@ impl UniversalDocument {
         }
         
         // If we found dates, use them
-        let (start_year, end_year) = if !dates.is_empty() {
+        let (_start_year, _end_year) = if !dates.is_empty() {
             dates.sort();
             (dates[0], dates[dates.len() - 1])
         } else {

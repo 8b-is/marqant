@@ -23,6 +23,7 @@ base64 = "0.22"
 default = ["std"]
 std = []
 alloc = []
+mem8 = []
 
 [workspace]
 

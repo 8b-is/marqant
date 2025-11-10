@@ -72,10 +72,10 @@ impl Translate<RawText, UtlDoc> for RawToUtl {
             if sentence.is_empty() { continue; }
             
             // Convert to UTL symbols
-            if sentence.contains("i ") || sentence.contains("me") {
+            if sentence.contains(" i ") || sentence.starts_with("i ") || sentence.ends_with(" i") || sentence.contains("me") {
                 tokens.push("🙋".to_string()); // Self
             }
-            if sentence.contains("you") {
+            if sentence.contains(" you ") || sentence.starts_with("you ") || sentence.ends_with(" you") || sentence == "you" {
                 tokens.push("👤".to_string()); // Other
             }
             if sentence.contains("love") {
@@ -87,7 +87,7 @@ impl Translate<RawText, UtlDoc> for RawToUtl {
             if sentence.contains("remember") {
                 tokens.push("💭".to_string());
             }
-            if sentence.contains("was") || sentence.contains("were") {
+            if sentence.contains("was") || sentence.contains("were") || sentence.contains("being") {
                 tokens.push("⏮".to_string()); // Past
             }
             if sentence.contains("is") || sentence.contains("am") || sentence.contains("are") {
@@ -177,6 +177,43 @@ impl Translate<UtlDoc, HumanText<Jpn>> for UtlToHuman<Jpn> {
     }
 }
 
+impl UtlToHuman<Spa> {
+    pub fn new() -> Self { Self(PhantomData) }
+}
+
+impl Translate<UtlDoc, HumanText<Spa>> for UtlToHuman<Spa> {
+    fn translate(&self, input: UtlDoc) -> Result<HumanText<Spa>> {
+        let mut words = Vec::new();
+
+        for token in &input.tokens {
+            let word = match token.as_str() {
+                "🙋" => "yo",
+                "👤" => "tú",
+                "❤️" => "amor",
+                "🧠" => "pensar",
+                "💭" => "recordar",
+                "⏮" => "era",
+                "⏺" => "es",
+                "⏭" => "será",
+                "😊" => "feliz",
+                "😢" => "triste",
+                "⧖" => ".",
+                _ => continue,
+            };
+            words.push(word);
+        }
+
+        Ok(HumanText {
+            _lang: PhantomData,
+            text: words.join(" "),
+        })
+    }
+}
+
+/// Convenience helper: Translate UTL to Spanish
+pub fn to_spanish(doc: UtlDoc) -> Result<HumanText<Spa>> {
+    UtlToHuman::<Spa>::new().translate(doc)
+}
 // ---------- FORBIDDEN paths (intentionally UNIMPLEMENTED) ----------
 // 
 // These will NEVER compile:

@@ -133,10 +133,48 @@ fn parse_std_flag(flags: Option<&str>) -> Option<String> {
 }
 
 impl Marqant {
+    /// Compresses markdown content using default settings.
+    ///
+    /// # Arguments
+    ///
+    /// * `content` - The markdown content to compress
+    ///
+    /// # Returns
+    ///
+    /// Returns a compressed `.mq` format string with header, dictionary, and content.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use marqant::Marqant;
+    ///
+    /// let result = Marqant::compress_markdown("# Hello World").unwrap();
+    /// assert!(result.starts_with("MQ2~"));
+    /// ```
     pub fn compress_markdown(content: &str) -> Result<String> {
         Self::compress_markdown_with_flags(content, None)
     }
 
+    /// Compresses markdown content with additional flags for customization.
+    ///
+    /// # Arguments
+    ///
+    /// * `content` - The markdown content to compress
+    /// * `flags` - Optional flags string that can contain:
+    ///   - `-zlib`: Use zlib compression on top of tokenization
+    ///   - `-semantic`: Add semantic section tags
+    ///   - `-std:<id>`: Use a specific standard token dictionary
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use marqant::Marqant;
+    ///
+    /// let result = Marqant::compress_markdown_with_flags(
+    ///     "# Hello World",
+    ///     Some("-zlib -semantic")
+    /// ).unwrap();
+    /// ```
     pub fn compress_markdown_with_flags(content: &str, flags: Option<&str>) -> Result<String> {
         let mut output = String::new();
         let original_size = content.len();

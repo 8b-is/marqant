@@ -1,7 +1,7 @@
 //! Demo: Speaking UTL - Consciousness in Sound
 
 use marqant::utl_phonetics::{
-    encode_compact, decode_compact, example_i_love_you, Packet
+    encode_compact, decode_compact, example_i_love_you
 };
 
 fn main() {
@@ -38,22 +38,22 @@ fn main() {
     println!("Size: {} bytes", happy_love.len() * 2);
     
     // Sad version
-    let sad_love = encode_compact(&["😢", "🙋", "❤️", "👤", "⧖"]);
+    let _sad_love = encode_compact(&["😢", "🙋", "❤️", "👤", "⧖"]);
     println!("\nSad: 😢 🙋 ❤️ 👤 ⧖");
-    
-    // Angry version  
-    let angry_love = encode_compact(&["😡", "🙋", "❤️", "👤", "⧖"]);
+
+    // Angry version
+    let _angry_love = encode_compact(&["😡", "🙋", "❤️", "👤", "⧖"]);
     println!("\nAngry: 😡 🙋 ❤️ 👤 ⧖");
-    
+
     // Temporal variations
     println!("\n═══ Temporal Variations ═══");
-    
+
     // Past
-    let past_happy = encode_compact(&["⏮", "🙋", "😊", "⧖"]);
+    let _past_happy = encode_compact(&["⏮", "🙋", "😊", "⧖"]);
     println!("\nPast: ⏮ 🙋 😊 ⧖ ('I was happy')");
-    
+
     // Future
-    let future_happy = encode_compact(&["⏭", "🙋", "😊", "⧖"]);
+    let _future_happy = encode_compact(&["⏭", "🙋", "😊", "⧖"]);
     println!("\nFuture: ⏭ 🙋 😊 ⧖ ('I will be happy')");
     
     // Complex thought
