@@ -72,7 +72,7 @@ impl Translate<RawText, UtlDoc> for RawToUtl {
             if sentence.is_empty() { continue; }
             
             // Convert to UTL symbols
-            if sentence.contains("i ") || sentence.contains(" i") || sentence.starts_with("i ") || sentence.contains("me") {
+            if sentence.contains(" i ") || sentence.starts_with("i ") || sentence.ends_with(" i") || sentence.contains("me") {
                 tokens.push("🙋".to_string()); // Self
             }
             if sentence.contains(" you ") || sentence.starts_with("you ") || sentence.ends_with(" you") || sentence == "you" {
