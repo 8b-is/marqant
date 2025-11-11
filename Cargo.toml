@@ -17,6 +17,7 @@ anyhow = "1.0"
 chrono = { version = "0.4", features = ["serde"] }
 flate2 = "1.0"
 base64 = "0.22"
+regex = "1.10"
 
 
 [features]

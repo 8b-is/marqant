@@ -4,7 +4,10 @@ use std::path::PathBuf;
 
 use anyhow::{anyhow, Context, Result};
 
-use marqant::{mq2_uni_decode, mq2_uni_encode, read_mq_metadata, Marqant, MQ2_UNI_DICT_ID};
+use marqant::{
+    log_summarizer::{LogSummarizer, SummarizerConfig},
+    mq2_uni_decode, mq2_uni_encode, read_mq_metadata, Marqant, MQ2_UNI_DICT_ID,
+};
 
 pub fn run_cli() -> Result<()> {
     let mut args = std::env::args().skip(1);
@@ -299,6 +302,9 @@ pub fn run_cli() -> Result<()> {
                 }
             }
         }
+        "tail" => {
+            run_smart_tail(args)?;
+        }
         _ => return print_help(),
     }
 
@@ -314,8 +320,91 @@ Usage:\n\
   mq compress <input.md> [-o <output.mq>] [--binary] [--semantic] [--std <id>]\n\
   mq decompress <input.mq> [-o <output.md>]\n\
   mq analyze <input.md>\n\
-  mq inspect <input.mq> [--show-tokens]\n\n\
-If <input> omitted, reads stdin. Writes to stdout if -o omitted.";
+  mq inspect <input.mq> [--show-tokens]\n\
+  mq tail [<file>] [-n <lines>] [--raw] [--threshold <0.0-1.0>]\n\n\
+If <input> omitted, reads stdin. Writes to stdout if -o omitted.\n\n\
+Smart Tail:\n\
+  Drop-in tail replacement with AI-powered log summarization.\n\
+  Use --raw for classic tail behavior (no summarization).\n\
+  Tip: alias tail='mq tail' for automatic smart logs everywhere!";
     println!("{}", help);
     Ok(())
+}
+
+/// Run smart tail with log summarization
+fn run_smart_tail(mut args: impl Iterator<Item = String>) -> Result<()> {
+    let mut input: Option<PathBuf> = None;
+    let mut num_lines: usize = 10;
+    let mut raw_mode = false;
+    let mut config = SummarizerConfig::default();
+
+    // Parse arguments
+    while let Some(arg) = args.next() {
+        match arg.as_str() {
+            "-n" | "--lines" => {
+                let Some(n) = args.next() else {
+                    return Err(anyhow!("missing value for {arg}"));
+                };
+                num_lines = n
+                    .parse()
+                    .with_context(|| format!("invalid number: {n}"))?;
+            }
+            "--raw" => {
+                raw_mode = true;
+            }
+            "--threshold" => {
+                let Some(t) = args.next() else {
+                    return Err(anyhow!("missing value for --threshold"));
+                };
+                config.novelty_threshold = t
+                    .parse()
+                    .with_context(|| format!("invalid threshold: {t}"))?;
+            }
+            "--no-emoji" => {
+                config.use_emojis = false;
+            }
+            s if !s.starts_with('-') && input.is_none() => {
+                input = Some(PathBuf::from(s));
+            }
+            _ => return Err(anyhow!("unknown or duplicate arg: {arg}")),
+        }
+    }
+
+    // Read input
+    let lines = read_tail_lines(input.as_deref(), num_lines)?;
+
+    // Raw mode - just print the lines
+    if raw_mode {
+        for line in lines {
+            println!("{}", line);
+        }
+        return Ok(());
+    }
+
+    // Smart mode - analyze and summarize
+    let mut summarizer = LogSummarizer::new(config.clone());
+    let summary = summarizer.summarize(&lines);
+    let output = summary.format(&config);
+
+    println!("{}", output);
+
+    Ok(())
+}
+
+/// Read last N lines from file or stdin
+fn read_tail_lines(path: Option<&std::path::Path>, num_lines: usize) -> Result<Vec<String>> {
+    let content = match path {
+        Some(p) => fs::read_to_string(p)
+            .with_context(|| format!("failed reading {}", p.display()))?,
+        None => {
+            let mut buf = String::new();
+            io::stdin().read_to_string(&mut buf)?;
+            buf
+        }
+    };
+
+    // Split into lines and take last N
+    let all_lines: Vec<String> = content.lines().map(|s| s.to_string()).collect();
+    let start_idx = all_lines.len().saturating_sub(num_lines);
+    Ok(all_lines[start_idx..].to_vec())
 }
