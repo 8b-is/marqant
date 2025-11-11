@@ -322,13 +322,12 @@ Usage:\n\
   mq decompress <input.mq> [-o <output.md>]\n\
   mq analyze <input.md>\n\
   mq inspect <input.mq> [--show-tokens]\n\
-  mq tail [<file>] [-n <lines>] [-D] [--raw] [--threshold <0.0-1.0>]\n\n\
+  mq tail [<file>] [-n <lines>] [-D] [--raw]\n\n\
 If <input> omitted, reads stdin. Writes to stdout if -o omitted.\n\n\
 Smart Tail:\n\
   Drop-in tail replacement with AI-powered log summarization.\n\
   -D, --delta    Delta mode: only show changes since last run (stateful)\n\
-  --raw          Classic tail behavior (no summarization)\n\
-  --threshold    Novelty threshold (0.0-1.0, default: 0.1)\n\n\
+  --raw          Classic tail behavior (no summarization)\n\n\
   Tip: alias tail='mq tail' for automatic smart logs everywhere!\n\n\
 Delta Mode (-D):\n\
   Stateful analysis that tracks what you've seen before:\n\
@@ -369,14 +368,6 @@ fn run_smart_tail(mut args: impl Iterator<Item = String>) -> Result<()> {
             }
             "--raw" => {
                 raw_mode = true;
-            }
-            "--threshold" => {
-                let Some(t) = args.next() else {
-                    return Err(anyhow!("missing value for --threshold"));
-                };
-                config.novelty_threshold = t
-                    .parse()
-                    .with_context(|| format!("invalid threshold: {t}"))?;
             }
             "--no-emoji" => {
                 config.use_emojis = false;
@@ -481,12 +472,8 @@ fn run_delta_mode(path: &std::path::Path, lines: &[String], config: &SummarizerC
     if !novel_patterns.is_empty() {
         let icon = if emoji { "💎 " } else { "" };
         println!("{}brand-new pattern{}", icon, if novel_patterns.len() == 1 { "" } else { "s" });
-        for (i, pattern) in novel_patterns.iter().take(10).enumerate() {
-            if i == 0 {
-                println!("  • {} (first seen)", pattern);
-            } else {
-                println!("  • {}", pattern);
-            }
+        for pattern in novel_patterns.iter().take(10) {
+            println!("  • {} (first seen)", pattern);
         }
         println!();
     }

@@ -12,19 +12,18 @@
 //! ```bash
 //! tail -100 app.log | mq tail
 //! mq tail -n 1000 app.log
-//! tail -f app.log | mq tail --stream
+//! tail -f app.log | mq tail
 //! ```
 
 use crate::novelty::{NoveltyClass, NoveltyTracker};
 use crate::semantic::{SemanticToken, SemanticUnit};
+use once_cell::sync::Lazy;
+use regex::Regex;
 use std::collections::HashMap;
 
 /// Configuration for log summarization
 #[derive(Debug, Clone)]
 pub struct SummarizerConfig {
-    /// Minimum novelty threshold (0.0-1.0)
-    pub novelty_threshold: f32,
-
     /// Show background noise stats
     pub show_noise: bool,
 
@@ -38,7 +37,6 @@ pub struct SummarizerConfig {
 impl Default for SummarizerConfig {
     fn default() -> Self {
         Self {
-            novelty_threshold: 0.1,
             show_noise: true,
             max_per_category: 10,
             use_emojis: true,
@@ -133,9 +131,9 @@ impl LogSummarizer {
         }
 
         // Deduplicate and sort by novelty
-        revolutionary.sort_by(|a, b| b.novelty.partial_cmp(&a.novelty).unwrap());
-        important.sort_by(|a, b| b.novelty.partial_cmp(&a.novelty).unwrap());
-        familiar.sort_by(|a, b| b.novelty.partial_cmp(&a.novelty).unwrap());
+        revolutionary.sort_by(|a, b| b.novelty.partial_cmp(&a.novelty).unwrap_or(std::cmp::Ordering::Equal));
+        important.sort_by(|a, b| b.novelty.partial_cmp(&a.novelty).unwrap_or(std::cmp::Ordering::Equal));
+        familiar.sort_by(|a, b| b.novelty.partial_cmp(&a.novelty).unwrap_or(std::cmp::Ordering::Equal));
 
         // Deduplicate by pattern
         revolutionary = Self::deduplicate_entries(revolutionary);
@@ -181,31 +179,33 @@ impl LogSummarizer {
 
     /// Extract pattern from log line (remove variable parts)
     fn extract_pattern(&self, line: &str) -> String {
+        // Compile regex patterns once using lazy_static
+        static TIMESTAMP_RE: Lazy<Regex> = Lazy::new(|| {
+            Regex::new(r"\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2}:\d{2}").unwrap()
+        });
+        static IP_RE: Lazy<Regex> = Lazy::new(|| {
+            Regex::new(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}").unwrap()
+        });
+        static NUM_RE: Lazy<Regex> = Lazy::new(|| {
+            Regex::new(r"\b\d+\b").unwrap()
+        });
+        static UUID_RE: Lazy<Regex> = Lazy::new(|| {
+            Regex::new(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}").unwrap()
+        });
+
         let mut pattern = line.to_string();
 
         // Remove timestamps (ISO 8601, syslog, etc.)
-        pattern = regex::Regex::new(r"\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2}:\d{2}")
-            .unwrap()
-            .replace_all(&pattern, "<TIMESTAMP>")
-            .to_string();
+        pattern = TIMESTAMP_RE.replace_all(&pattern, "<TIMESTAMP>").to_string();
 
         // Remove IPs
-        pattern = regex::Regex::new(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}")
-            .unwrap()
-            .replace_all(&pattern, "<IP>")
-            .to_string();
+        pattern = IP_RE.replace_all(&pattern, "<IP>").to_string();
 
         // Remove numbers (but keep log levels)
-        pattern = regex::Regex::new(r"\b\d+\b")
-            .unwrap()
-            .replace_all(&pattern, "<NUM>")
-            .to_string();
+        pattern = NUM_RE.replace_all(&pattern, "<NUM>").to_string();
 
         // Remove UUIDs
-        pattern = regex::Regex::new(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
-            .unwrap()
-            .replace_all(&pattern, "<UUID>")
-            .to_string();
+        pattern = UUID_RE.replace_all(&pattern, "<UUID>").to_string();
 
         pattern
     }

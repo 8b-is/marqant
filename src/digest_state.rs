@@ -6,7 +6,7 @@
 //!
 //! - Inode-bound state (survives log rotations)
 //! - Fast FNV-1a hashing for pattern fingerprinting
-//! - Compact binary state files (~/.mq/state/)
+//! - Text-based state files (key=value, CSV) (~/.mq/state/)
 //! - Baseline tracking for anomaly detection
 //! - Rolling window for trend analysis
 
@@ -18,7 +18,7 @@ use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
 
 /// Digest state for a single log file
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct DigestState {
     /// Device ID (for inode uniqueness)
     pub dev: u64,
@@ -37,19 +37,6 @@ pub struct DigestState {
 
     /// Baseline counts for anomaly detection (hash -> baseline count)
     pub baseline: HashMap<u64, u32>,
-}
-
-impl Default for DigestState {
-    fn default() -> Self {
-        Self {
-            dev: 0,
-            inode: 0,
-            last_offset: 0,
-            counts: HashMap::new(),
-            updated_unix: 0,
-            baseline: HashMap::new(),
-        }
-    }
 }
 
 impl DigestState {
@@ -178,7 +165,7 @@ impl DigestState {
 
         // Get state directory
         let state_dir = dirs::home_dir()
-            .unwrap_or_else(|| PathBuf::from("."))
+            .context("could not determine home directory for state file storage")?
             .join(".mq")
             .join("state");
 
