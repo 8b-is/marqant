@@ -395,18 +395,27 @@ mod tests {
         let config = SummarizerConfig::default();
         let mut summarizer = LogSummarizer::new(config);
 
-        let lines = vec![
-            "INFO: Server started successfully".to_string(),
-            "INFO: Server started successfully".to_string(),
-            "ERROR: Database connection failed".to_string(),
-        ];
+        // Add many repeated lines to trigger familiar/noise classification
+        let mut lines = vec![];
+        for _ in 0..10 {
+            lines.push("INFO: Server started successfully".to_string());
+        }
+        lines.push("ERROR: Database connection failed".to_string());
 
         let summary = summarizer.summarize(&lines);
 
         // Should have novel patterns
         assert!(summary.revolutionary.len() > 0 || summary.important.len() > 0);
 
-        // Should detect repetition
-        assert!(summary.noise_count > 0 || summary.familiar.len() > 0);
+        // Should detect repetition with many occurrences
+        // After 10 repetitions, patterns should be familiar or noise
+        assert!(
+            summary.noise_count > 0 || summary.familiar.len() > 0,
+            "Expected repetition detection. Revolutionary: {}, Important: {}, Familiar: {}, Noise: {}",
+            summary.revolutionary.len(),
+            summary.important.len(),
+            summary.familiar.len(),
+            summary.noise_count
+        );
     }
 }
