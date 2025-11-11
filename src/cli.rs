@@ -4,7 +4,11 @@ use std::path::PathBuf;
 
 use anyhow::{anyhow, Context, Result};
 
-use marqant::{mq2_uni_decode, mq2_uni_encode, read_mq_metadata, Marqant, MQ2_UNI_DICT_ID};
+use marqant::{
+    digest_state::{DigestState, fhash},
+    log_summarizer::{LogSummarizer, SummarizerConfig},
+    mq2_uni_decode, mq2_uni_encode, read_mq_metadata, Marqant, MQ2_UNI_DICT_ID,
+};
 
 pub fn run_cli() -> Result<()> {
     let mut args = std::env::args().skip(1);
@@ -299,6 +303,9 @@ pub fn run_cli() -> Result<()> {
                 }
             }
         }
+        "tail" => {
+            run_smart_tail(args)?;
+        }
         _ => return print_help(),
     }
 
@@ -314,8 +321,223 @@ Usage:\n\
   mq compress <input.md> [-o <output.mq>] [--binary] [--semantic] [--std <id>]\n\
   mq decompress <input.mq> [-o <output.md>]\n\
   mq analyze <input.md>\n\
-  mq inspect <input.mq> [--show-tokens]\n\n\
-If <input> omitted, reads stdin. Writes to stdout if -o omitted.";
+  mq inspect <input.mq> [--show-tokens]\n\
+  mq tail [<file>] [-n <lines>] [-D] [--raw] [--threshold <0.0-1.0>]\n\n\
+If <input> omitted, reads stdin. Writes to stdout if -o omitted.\n\n\
+Smart Tail:\n\
+  Drop-in tail replacement with AI-powered log summarization.\n\
+  -D, --delta    Delta mode: only show changes since last run (stateful)\n\
+  --raw          Classic tail behavior (no summarization)\n\
+  --threshold    Novelty threshold (0.0-1.0, default: 0.1)\n\n\
+  Tip: alias tail='mq tail' for automatic smart logs everywhere!\n\n\
+Delta Mode (-D):\n\
+  Stateful analysis that tracks what you've seen before:\n\
+  • Only shows NEW patterns (brand-new errors/warnings)\n\
+  • Detects anomalies vs baseline (spikes, regressions)\n\
+  • Suppresses repeated noise automatically\n\
+  • State stored per-file in ~/.mq/state/ (inode-bound)\n\n\
+Examples:\n\
+  mq tail -n 100 app.log              # Smart summary\n\
+  mq tail -D -n 2000 app.log          # Delta mode: only new patterns\n\
+  tail -f app.log | mq tail           # Live smart tail\n\
+  mq tail app.log --raw               # Classic tail mode";
     println!("{}", help);
     Ok(())
+}
+
+/// Run smart tail with log summarization
+fn run_smart_tail(mut args: impl Iterator<Item = String>) -> Result<()> {
+    let mut input: Option<PathBuf> = None;
+    let mut num_lines: usize = 10;
+    let mut raw_mode = false;
+    let mut delta_mode = false;
+    let mut config = SummarizerConfig::default();
+
+    // Parse arguments
+    while let Some(arg) = args.next() {
+        match arg.as_str() {
+            "-n" | "--lines" => {
+                let Some(n) = args.next() else {
+                    return Err(anyhow!("missing value for {arg}"));
+                };
+                num_lines = n
+                    .parse()
+                    .with_context(|| format!("invalid number: {n}"))?;
+            }
+            "-D" | "--delta" => {
+                delta_mode = true;
+            }
+            "--raw" => {
+                raw_mode = true;
+            }
+            "--threshold" => {
+                let Some(t) = args.next() else {
+                    return Err(anyhow!("missing value for --threshold"));
+                };
+                config.novelty_threshold = t
+                    .parse()
+                    .with_context(|| format!("invalid threshold: {t}"))?;
+            }
+            "--no-emoji" => {
+                config.use_emojis = false;
+            }
+            s if !s.starts_with('-') && input.is_none() => {
+                input = Some(PathBuf::from(s));
+            }
+            _ => return Err(anyhow!("unknown or duplicate arg: {arg}")),
+        }
+    }
+
+    // Read input
+    let lines = read_tail_lines(input.as_deref(), num_lines)?;
+
+    // Raw mode - just print the lines
+    if raw_mode {
+        for line in lines {
+            println!("{}", line);
+        }
+        return Ok(());
+    }
+
+    // Delta mode - only show changes since last run
+    if delta_mode {
+        if let Some(path) = input.as_deref() {
+            run_delta_mode(path, &lines, &config)?;
+        } else {
+            return Err(anyhow!("Delta mode (-D) requires a file path (not stdin)"));
+        }
+    } else {
+        // Smart mode - analyze and summarize
+        let mut summarizer = LogSummarizer::new(config.clone());
+        let summary = summarizer.summarize(&lines);
+        let output = summary.format(&config);
+        println!("{}", output);
+    }
+
+    Ok(())
+}
+
+/// Run delta mode - only show changes since last run
+fn run_delta_mode(path: &std::path::Path, lines: &[String], config: &SummarizerConfig) -> Result<()> {
+    // Load or create digest state
+    let mut state = DigestState::load_or_create(path)?;
+
+    let last_updated = if state.updated_unix > 0 {
+        chrono::DateTime::from_timestamp(state.updated_unix, 0)
+            .map(|dt| dt.format("%H:%M:%S").to_string())
+            .unwrap_or_else(|| "unknown".to_string())
+    } else {
+        "never".to_string()
+    };
+
+    // Analyze lines and detect deltas
+    let mut novel_patterns = Vec::new();
+    let mut anomalies = Vec::new();
+    let mut suppressed = std::collections::HashMap::new();
+
+    for line in lines {
+        let hash = fhash(line);
+        let was_novel = state.is_novel(hash);
+
+        // Record this pattern
+        state.record_pattern(hash);
+        let new_total = state.get_count(hash);
+
+        if was_novel {
+            // Brand new pattern
+            novel_patterns.push(line.clone());
+        } else {
+            // Check for anomalies vs baseline
+            let (multiplier, is_spike) = state.anomaly_score(hash, new_total);
+
+            if is_spike && multiplier.is_finite() {
+                anomalies.push((line.clone(), multiplier));
+            } else {
+                // Suppressed as noise
+                *suppressed.entry(line.clone()).or_insert(0) += 1;
+            }
+        }
+    }
+
+    // Update baseline for next run
+    if state.baseline.is_empty() {
+        state.update_baseline();
+    }
+
+    // Save state
+    state.updated_unix = chrono::Utc::now().timestamp();
+    state.save(path)?;
+
+    // Format output
+    let emoji = config.use_emojis;
+    println!(
+        "📊 delta (since {}, {} lines)",
+        last_updated,
+        lines.len()
+    );
+    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+
+    // Novel patterns
+    if !novel_patterns.is_empty() {
+        let icon = if emoji { "💎 " } else { "" };
+        println!("{}brand-new pattern{}", icon, if novel_patterns.len() == 1 { "" } else { "s" });
+        for (i, pattern) in novel_patterns.iter().take(10).enumerate() {
+            if i == 0 {
+                println!("  • {} (first seen)", pattern);
+            } else {
+                println!("  • {}", pattern);
+            }
+        }
+        println!();
+    }
+
+    // Anomalies
+    if !anomalies.is_empty() {
+        let icon = if emoji { "🌟 " } else { "" };
+        println!("{}anomalies vs baseline", icon);
+        for (pattern, mult) in anomalies.iter().take(10) {
+            println!("  • {} (↑{:.1}×)", pattern, mult);
+        }
+        println!();
+    }
+
+    // Suppressed noise
+    if !suppressed.is_empty() {
+        let icon = if emoji { "💤 " } else { "" };
+        let total_suppressed: usize = suppressed.values().sum();
+        println!("{}suppressed: {} lines", icon, total_suppressed);
+
+        // Show top suppressed patterns
+        let mut sorted: Vec<_> = suppressed.iter().collect();
+        sorted.sort_by(|a, b| b.1.cmp(a.1));
+
+        for (pattern, count) in sorted.iter().take(3) {
+            let truncated = if pattern.len() > 60 {
+                format!("{}...", &pattern[..57])
+            } else {
+                pattern.to_string()
+            };
+            println!("  • {}: {}", truncated, count);
+        }
+    }
+
+    Ok(())
+}
+
+/// Read last N lines from file or stdin
+fn read_tail_lines(path: Option<&std::path::Path>, num_lines: usize) -> Result<Vec<String>> {
+    let content = match path {
+        Some(p) => fs::read_to_string(p)
+            .with_context(|| format!("failed reading {}", p.display()))?,
+        None => {
+            let mut buf = String::new();
+            io::stdin().read_to_string(&mut buf)?;
+            buf
+        }
+    };
+
+    // Split into lines and take last N
+    let all_lines: Vec<String> = content.lines().map(|s| s.to_string()).collect();
+    let start_idx = all_lines.len().saturating_sub(num_lines);
+    Ok(all_lines[start_idx..].to_vec())
 }
