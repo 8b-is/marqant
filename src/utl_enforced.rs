@@ -1,5 +1,5 @@
 //! Type-level enforced UTL pipeline
-//! 
+//!
 //! Makes Human→Human translation IMPOSSIBLE at compile time!
 
 use anyhow::{anyhow, Result};
@@ -44,12 +44,36 @@ pub struct Zho; // Chinese
 pub struct Ara; // Arabic
 pub struct Hin; // Hindi
 
-impl Language for Eng { fn name() -> &'static str { "English" } }
-impl Language for Jpn { fn name() -> &'static str { "Japanese" } }
-impl Language for Spa { fn name() -> &'static str { "Spanish" } }
-impl Language for Zho { fn name() -> &'static str { "Chinese" } }
-impl Language for Ara { fn name() -> &'static str { "Arabic" } }
-impl Language for Hin { fn name() -> &'static str { "Hindi" } }
+impl Language for Eng {
+    fn name() -> &'static str {
+        "English"
+    }
+}
+impl Language for Jpn {
+    fn name() -> &'static str {
+        "Japanese"
+    }
+}
+impl Language for Spa {
+    fn name() -> &'static str {
+        "Spanish"
+    }
+}
+impl Language for Zho {
+    fn name() -> &'static str {
+        "Chinese"
+    }
+}
+impl Language for Ara {
+    fn name() -> &'static str {
+        "Arabic"
+    }
+}
+impl Language for Hin {
+    fn name() -> &'static str {
+        "Hindi"
+    }
+}
 
 // ---------- Translation trait (directional) ----------
 
@@ -72,19 +96,29 @@ impl Translate<RawText, UtlDoc> for RawToUtl {
                 cleaned == word
             })
         }
-        
+
         let mut tokens = Vec::new();
-        
+
         // Real UTL tokenization with theoglyphic symbols
         for sentence in input.0.split('.') {
             let sentence = sentence.trim().to_lowercase();
-            if sentence.is_empty() { continue; }
-            
+            if sentence.is_empty() {
+                continue;
+            }
+
             // Convert to UTL symbols
-            if sentence.contains(" i ") || sentence.starts_with("i ") || sentence.ends_with(" i") || sentence.contains("me") {
+            if sentence.contains(" i ")
+                || sentence.starts_with("i ")
+                || sentence.ends_with(" i")
+                || sentence.contains("me")
+            {
                 tokens.push("🙋".to_string()); // Self
             }
-            if sentence.contains(" you ") || sentence.starts_with("you ") || sentence.ends_with(" you") || sentence == "you" {
+            if sentence.contains(" you ")
+                || sentence.starts_with("you ")
+                || sentence.ends_with(" you")
+                || sentence == "you"
+            {
                 tokens.push("👤".to_string()); // Other
             }
             if sentence.contains("love") {
@@ -96,7 +130,10 @@ impl Translate<RawText, UtlDoc> for RawToUtl {
             if sentence.contains("remember") {
                 tokens.push("💭".to_string());
             }
-            if contains_word(&sentence, "was") || contains_word(&sentence, "were") || contains_word(&sentence, "being") {
+            if contains_word(&sentence, "was")
+                || contains_word(&sentence, "were")
+                || contains_word(&sentence, "being")
+            {
                 tokens.push("⏮".to_string()); // Past
             }
             if sentence.contains("is") || sentence.contains("am") || sentence.contains("are") {
@@ -105,12 +142,12 @@ impl Translate<RawText, UtlDoc> for RawToUtl {
             if sentence.contains("will") {
                 tokens.push("⏭".to_string()); // Future
             }
-            
+
             // Add UDC delay marker between thoughts
             tokens.push("⧖".to_string());
         }
-        
-        Ok(UtlDoc { 
+
+        Ok(UtlDoc {
             tokens,
             metadata: None,
         })
@@ -120,14 +157,22 @@ impl Translate<RawText, UtlDoc> for RawToUtl {
 /// UTL to human language - the ONLY exit point
 pub struct UtlToHuman<L: Language>(PhantomData<L>);
 
+impl Default for UtlToHuman<Eng> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl UtlToHuman<Eng> {
-    pub fn new() -> Self { Self(PhantomData) }
+    pub fn new() -> Self {
+        Self(PhantomData)
+    }
 }
 
 impl Translate<UtlDoc, HumanText<Eng>> for UtlToHuman<Eng> {
     fn translate(&self, input: UtlDoc) -> Result<HumanText<Eng>> {
         let mut words = Vec::new();
-        
+
         for token in &input.tokens {
             let word = match token.as_str() {
                 "🙋" => "I",
@@ -145,7 +190,7 @@ impl Translate<UtlDoc, HumanText<Eng>> for UtlToHuman<Eng> {
             };
             words.push(word);
         }
-        
+
         Ok(HumanText {
             _lang: PhantomData,
             text: words.join(" "),
@@ -153,14 +198,22 @@ impl Translate<UtlDoc, HumanText<Eng>> for UtlToHuman<Eng> {
     }
 }
 
+impl Default for UtlToHuman<Jpn> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl UtlToHuman<Jpn> {
-    pub fn new() -> Self { Self(PhantomData) }
+    pub fn new() -> Self {
+        Self(PhantomData)
+    }
 }
 
 impl Translate<UtlDoc, HumanText<Jpn>> for UtlToHuman<Jpn> {
     fn translate(&self, input: UtlDoc) -> Result<HumanText<Jpn>> {
         let mut words = Vec::new();
-        
+
         for token in &input.tokens {
             let word = match token.as_str() {
                 "🙋" => "私",
@@ -178,7 +231,7 @@ impl Translate<UtlDoc, HumanText<Jpn>> for UtlToHuman<Jpn> {
             };
             words.push(word);
         }
-        
+
         Ok(HumanText {
             _lang: PhantomData,
             text: words.join(""),
@@ -186,8 +239,16 @@ impl Translate<UtlDoc, HumanText<Jpn>> for UtlToHuman<Jpn> {
     }
 }
 
+impl Default for UtlToHuman<Spa> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl UtlToHuman<Spa> {
-    pub fn new() -> Self { Self(PhantomData) }
+    pub fn new() -> Self {
+        Self(PhantomData)
+    }
 }
 
 impl Translate<UtlDoc, HumanText<Spa>> for UtlToHuman<Spa> {
@@ -224,7 +285,7 @@ pub fn to_spanish(doc: UtlDoc) -> Result<HumanText<Spa>> {
     UtlToHuman::<Spa>::new().translate(doc)
 }
 // ---------- FORBIDDEN paths (intentionally UNIMPLEMENTED) ----------
-// 
+//
 // These will NEVER compile:
 // - No impl Translate<HumanText<Eng>, HumanText<Jpn>>
 // - No impl Translate<HumanText<Jpn>, HumanText<Eng>>
@@ -240,37 +301,37 @@ pub fn analyze_utl(doc: &mut UtlDoc) -> Result<()> {
     let mut genre = "unknown";
     let mut temporal = "present";
     let mut emotion = "neutral";
-    
+
     // Count temporal markers
     let past = doc.tokens.iter().filter(|t| t == &"⏮").count();
     let present = doc.tokens.iter().filter(|t| t == &"⏺").count();
     let future = doc.tokens.iter().filter(|t| t == &"⏭").count();
-    
+
     if past > present && past > future {
         temporal = "past";
     } else if future > present {
         temporal = "future";
     }
-    
+
     // Detect emotion
     if doc.tokens.contains(&"😊".to_string()) {
         emotion = "joy";
     } else if doc.tokens.contains(&"😢".to_string()) {
         emotion = "sadness";
     }
-    
+
     // Detect genre from patterns
     if doc.tokens.contains(&"💭".to_string()) && temporal == "past" {
         genre = "memoir";
     }
-    
+
     doc.metadata = Some(UtlMetadata {
         genre: genre.to_string(),
         temporal: temporal.to_string(),
         emotion: emotion.to_string(),
         delay_ms: 250, // UDC delay
     });
-    
+
     Ok(())
 }
 
@@ -288,19 +349,19 @@ pub fn store_mem8(_doc: &UtlDoc) -> Result<()> {
 
 // ---------- One-shot pipeline (the ONLY way) ----------
 
-pub fn process_to_language<L: Language>(raw: &str) -> Result<HumanText<L>> 
+pub fn process_to_language<L: Language>(raw: &str) -> Result<HumanText<L>>
 where
-    UtlToHuman<L>: Translate<UtlDoc, HumanText<L>>
+    UtlToHuman<L>: Translate<UtlDoc, HumanText<L>>,
 {
     // Step 1: Raw → UTL (mandatory)
     let mut utl = RawToUtl.translate(RawText(raw.to_owned()))?;
-    
+
     // Step 2: Analyze UTL
     analyze_utl(&mut utl)?;
-    
+
     // Step 3: Store in MEM|8
     store_mem8(&utl)?;
-    
+
     // Step 4: UTL → Human language
     UtlToHuman::<L>(PhantomData).translate(utl)
 }
@@ -327,7 +388,7 @@ pub fn forbid_human_to_human<A: Language, B: Language>() -> Result<()> {
 }
 
 // ---------- Example of impossible code ----------
-// 
+//
 // This WILL NOT COMPILE (uncomment to verify):
 //
 // pub fn bad_translator(eng: HumanText<Eng>) -> HumanText<Jpn> {
@@ -338,59 +399,83 @@ pub fn forbid_human_to_human<A: Language, B: Language>() -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_enforced_pipeline() {
         // This works - goes through UTL
         let result = to_english("I love you").unwrap();
         assert!(result.contains("I"));
         assert!(result.contains("love"));
-        
+
         let result = to_japanese("I love you").unwrap();
         assert!(result.contains("私"));
         assert!(result.contains("愛"));
     }
-    
+
     #[test]
     fn test_utl_analysis() {
-        let mut utl = RawToUtl.translate(RawText("I remember being happy".into())).unwrap();
+        let mut utl = RawToUtl
+            .translate(RawText("I remember being happy".into()))
+            .unwrap();
         analyze_utl(&mut utl).unwrap();
-        
+
         let meta = utl.metadata.unwrap();
         assert_eq!(meta.genre, "memoir");
         assert_eq!(meta.temporal, "past");
     }
-    
+
     #[test]
     fn test_word_boundaries() {
         // Test that word boundaries prevent false matches
         // "wasp" should not match "was"
         let utl = RawToUtl.translate(RawText("I saw a wasp".into())).unwrap();
-        assert!(!utl.tokens.contains(&"⏮".to_string()), "wasp should not match 'was'");
-        
+        assert!(
+            !utl.tokens.contains(&"⏮".to_string()),
+            "wasp should not match 'was'"
+        );
+
         // "wasn't" should not match "was"
-        let utl = RawToUtl.translate(RawText("I wasn't there".into())).unwrap();
-        assert!(!utl.tokens.contains(&"⏮".to_string()), "wasn't should not match 'was'");
-        
+        let utl = RawToUtl
+            .translate(RawText("I wasn't there".into()))
+            .unwrap();
+        assert!(
+            !utl.tokens.contains(&"⏮".to_string()),
+            "wasn't should not match 'was'"
+        );
+
         // "weren't" should not match "were"
-        let utl = RawToUtl.translate(RawText("They weren't happy".into())).unwrap();
-        assert!(!utl.tokens.contains(&"⏮".to_string()), "weren't should not match 'were'");
-        
+        let utl = RawToUtl
+            .translate(RawText("They weren't happy".into()))
+            .unwrap();
+        assert!(
+            !utl.tokens.contains(&"⏮".to_string()),
+            "weren't should not match 'were'"
+        );
+
         // "wellbeing" should not match "being"
-        let utl = RawToUtl.translate(RawText("Your wellbeing matters".into())).unwrap();
-        assert!(!utl.tokens.contains(&"⏮".to_string()), "wellbeing should not match 'being'");
-        
+        let utl = RawToUtl
+            .translate(RawText("Your wellbeing matters".into()))
+            .unwrap();
+        assert!(
+            !utl.tokens.contains(&"⏮".to_string()),
+            "wellbeing should not match 'being'"
+        );
+
         // But actual words should still match
         let utl = RawToUtl.translate(RawText("I was happy".into())).unwrap();
         assert!(utl.tokens.contains(&"⏮".to_string()), "was should match");
-        
-        let utl = RawToUtl.translate(RawText("They were happy".into())).unwrap();
+
+        let utl = RawToUtl
+            .translate(RawText("They were happy".into()))
+            .unwrap();
         assert!(utl.tokens.contains(&"⏮".to_string()), "were should match");
-        
-        let utl = RawToUtl.translate(RawText("I am being careful".into())).unwrap();
+
+        let utl = RawToUtl
+            .translate(RawText("I am being careful".into()))
+            .unwrap();
         assert!(utl.tokens.contains(&"⏮".to_string()), "being should match");
     }
-    
+
     // This test WILL NOT COMPILE if uncommented:
     // #[test]
     // fn test_forbidden_human_to_human() {

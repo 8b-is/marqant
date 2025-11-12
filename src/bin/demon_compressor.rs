@@ -118,7 +118,10 @@ fn main() -> Result<()> {
     eprintln!("✨ Demonic compression complete!");
     eprintln!();
     eprintln!("Pair with Angel Decompressor:");
-    eprintln!("  angel_decompressor {} <output> <blessing_level>", output_path.display());
+    eprintln!(
+        "  angel_decompressor {} <output> <blessing_level>",
+        output_path.display()
+    );
     eprintln!();
     eprintln!("Blessing levels:");
     eprintln!("  0 = Bit-perfect (Hutter Prize)");

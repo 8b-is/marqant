@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use anyhow::{anyhow, Context, Result};
 
 use marqant::{
-    digest_state::{DigestState, fhash},
+    digest_state::{fhash, DigestState},
     log_summarizer::{LogSummarizer, SummarizerConfig},
     mq2_uni_decode, mq2_uni_encode, read_mq_metadata, Marqant, MQ2_UNI_DICT_ID,
 };
@@ -360,9 +360,7 @@ fn run_smart_tail(mut args: impl Iterator<Item = String>) -> Result<()> {
                 let Some(n) = args.next() else {
                     return Err(anyhow!("missing value for {arg}"));
                 };
-                num_lines = n
-                    .parse()
-                    .with_context(|| format!("invalid number: {n}"))?;
+                num_lines = n.parse().with_context(|| format!("invalid number: {n}"))?;
             }
             "-D" | "--delta" => {
                 delta_mode = true;
@@ -418,7 +416,11 @@ fn run_smart_tail(mut args: impl Iterator<Item = String>) -> Result<()> {
 }
 
 /// Run delta mode - only show changes since last run
-fn run_delta_mode(path: &std::path::Path, lines: &[String], config: &SummarizerConfig) -> Result<()> {
+fn run_delta_mode(
+    path: &std::path::Path,
+    lines: &[String],
+    config: &SummarizerConfig,
+) -> Result<()> {
     // Load or create digest state
     let mut state = DigestState::load_or_create(path)?;
 
@@ -470,17 +472,17 @@ fn run_delta_mode(path: &std::path::Path, lines: &[String], config: &SummarizerC
 
     // Format output
     let emoji = config.use_emojis;
-    println!(
-        "📊 delta (since {}, {} lines)",
-        last_updated,
-        lines.len()
-    );
+    println!("📊 delta (since {}, {} lines)", last_updated, lines.len());
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
 
     // Novel patterns
     if !novel_patterns.is_empty() {
         let icon = if emoji { "💎 " } else { "" };
-        println!("{}brand-new pattern{}", icon, if novel_patterns.len() == 1 { "" } else { "s" });
+        println!(
+            "{}brand-new pattern{}",
+            icon,
+            if novel_patterns.len() == 1 { "" } else { "s" }
+        );
         for (i, pattern) in novel_patterns.iter().take(10).enumerate() {
             if i == 0 {
                 println!("  • {} (first seen)", pattern);
@@ -527,8 +529,9 @@ fn run_delta_mode(path: &std::path::Path, lines: &[String], config: &SummarizerC
 /// Read last N lines from file or stdin
 fn read_tail_lines(path: Option<&std::path::Path>, num_lines: usize) -> Result<Vec<String>> {
     let content = match path {
-        Some(p) => fs::read_to_string(p)
-            .with_context(|| format!("failed reading {}", p.display()))?,
+        Some(p) => {
+            fs::read_to_string(p).with_context(|| format!("failed reading {}", p.display()))?
+        }
         None => {
             let mut buf = String::new();
             io::stdin().read_to_string(&mut buf)?;

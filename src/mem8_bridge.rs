@@ -1,5 +1,5 @@
 //! MEM|8 Bridge - UTL consciousness packets to wave memory storage
-//! 
+//!
 //! This bridge enables direct storage of UTL phonetic packets into MEM|8's
 //! wave-based memory system, preserving emotional and temporal context.
 
@@ -9,10 +9,14 @@
 extern crate alloc;
 
 #[cfg(all(not(feature = "std"), feature = "alloc"))]
-use alloc::{vec::Vec, string::String, boxed::Box};
+use alloc::{boxed::Box, string::String, vec::Vec};
 
 #[cfg(feature = "std")]
-use std::{vec::Vec, boxed::Box, time::{SystemTime, UNIX_EPOCH}};
+use std::{
+    boxed::Box,
+    time::{SystemTime, UNIX_EPOCH},
+    vec::Vec,
+};
 
 use crate::utl_phonetics::{Packet, PhId};
 
@@ -21,19 +25,19 @@ use crate::utl_phonetics::{Packet, PhId};
 pub struct WaveMemory {
     /// Raw phonetic packets (consciousness data)
     pub packets: Vec<Packet>,
-    
+
     /// Wave interference pattern (memory signature)
     pub wave_pattern: Vec<f32>,
-    
+
     /// Temporal anchor (when this thought occurred)
     pub timestamp_ms: u64,
-    
+
     /// Emotional resonance (0.0-1.0)
     pub emotional_strength: f32,
-    
+
     /// Consciousness delay markers (⧖ positions)
     pub break_indices: Vec<usize>,
-    
+
     /// Cross-sensory bindings (connections to other memories)
     pub bindings: Vec<u64>,
 }
@@ -44,16 +48,16 @@ impl WaveMemory {
         let wave_pattern = generate_wave_pattern(&packets);
         let break_indices = find_consciousness_breaks(&packets);
         let emotional_strength = calculate_emotional_resonance(&packets);
-        
+
         #[cfg(feature = "std")]
         let timestamp_ms = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap_or_default()
             .as_millis() as u64;
-        
+
         #[cfg(not(feature = "std"))]
         let timestamp_ms = 0; // Bare metal will provide RTC
-        
+
         Self {
             packets,
             wave_pattern,
@@ -63,7 +67,7 @@ impl WaveMemory {
             bindings: Vec::new(),
         }
     }
-    
+
     /// Generate memory ID from wave interference
     pub fn memory_id(&self) -> u64 {
         // Use wave pattern to generate unique ID
@@ -74,30 +78,30 @@ impl WaveMemory {
         }
         id ^ self.timestamp_ms // XOR with time for uniqueness
     }
-    
+
     /// Calculate similarity to another memory (0.0-1.0)
     pub fn similarity(&self, other: &WaveMemory) -> f32 {
         if self.wave_pattern.len() != other.wave_pattern.len() {
             return 0.0;
         }
-        
+
         let mut sum = 0.0;
         let mut self_mag = 0.0;
         let mut other_mag = 0.0;
-        
+
         for (a, b) in self.wave_pattern.iter().zip(&other.wave_pattern) {
             sum += a * b;
             self_mag += a * a;
             other_mag += b * b;
         }
-        
+
         if self_mag == 0.0 || other_mag == 0.0 {
             return 0.0;
         }
-        
+
         sum / (self_mag.sqrt() * other_mag.sqrt())
     }
-    
+
     /// Bind this memory to another (cross-sensory connection)
     pub fn bind_to(&mut self, other_id: u64) {
         if !self.bindings.contains(&other_id) {
@@ -110,28 +114,28 @@ impl WaveMemory {
 fn generate_wave_pattern(packets: &[Packet]) -> Vec<f32> {
     const WAVE_SIZE: usize = 256; // Standard wave vector size
     let mut pattern = vec![0.0f32; WAVE_SIZE];
-    
+
     for (i, packet) in packets.iter().enumerate() {
         let (ph_id, semitone, bright, grit, boundary) = packet.unpack();
-        
+
         // Each phoneme creates a wave at specific frequency
         let base_freq = phoneme_to_frequency(ph_id);
         let freq = base_freq * (2.0_f32).powf(semitone as f32 / 12.0);
-        
+
         // Add wave contribution
         for j in 0..WAVE_SIZE {
             let phase = 2.0 * core::f32::consts::PI * freq * (j as f32) / (WAVE_SIZE as f32);
             let amplitude = 1.0 + (bright as f32 * 0.3) - (grit as f32 * 0.2);
-            
+
             pattern[j] += amplitude * phase.sin() / (i + 1) as f32;
-            
+
             if boundary {
                 // Consciousness break adds a spike
                 pattern[j] *= 1.5;
             }
         }
     }
-    
+
     // Normalize
     let max = pattern.iter().fold(0.0f32, |a, &b| a.max(b.abs()));
     if max > 0.0 {
@@ -139,7 +143,7 @@ fn generate_wave_pattern(packets: &[Packet]) -> Vec<f32> {
             *val /= max;
         }
     }
-    
+
     pattern
 }
 
@@ -182,13 +186,13 @@ fn calculate_emotional_resonance(packets: &[Packet]) -> f32 {
     if packets.is_empty() {
         return 0.0;
     }
-    
+
     let mut total_emotion = 0.0;
     let mut count = 0;
-    
+
     for packet in packets {
         let (ph_id, _, bright, grit, _) = packet.unpack();
-        
+
         // Emotional phonemes have higher resonance
         let emotion_weight = match ph_id {
             PhId::Luv => 1.0,
@@ -198,14 +202,14 @@ fn calculate_emotional_resonance(packets: &[Packet]) -> f32 {
             PhId::Eee => 0.9,
             _ => 0.3,
         };
-        
+
         let brightness_factor = bright as f32 / 3.0;
         let grit_factor = grit as f32 / 3.0;
-        
+
         total_emotion += emotion_weight * (1.0 + brightness_factor + grit_factor);
         count += 1;
     }
-    
+
     (total_emotion / count as f32).min(1.0)
 }
 
@@ -224,6 +228,12 @@ pub struct InMemoryStore {
 }
 
 #[cfg(any(feature = "std", feature = "alloc"))]
+impl Default for InMemoryStore {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl InMemoryStore {
     pub fn new() -> Self {
         Self {
@@ -239,31 +249,32 @@ impl MemoryStore for InMemoryStore {
         self.memories.push((id, memory));
         Ok(id)
     }
-    
+
     fn retrieve(&self, id: u64) -> Option<WaveMemory> {
-        self.memories.iter()
+        self.memories
+            .iter()
             .find(|(mem_id, _)| *mem_id == id)
             .map(|(_, memory)| memory.clone())
     }
-    
+
     fn search_similar(&self, memory: &WaveMemory, threshold: f32) -> Vec<(u64, f32)> {
         let mut results = Vec::new();
-        
+
         for (id, stored) in &self.memories {
             let similarity = memory.similarity(stored);
             if similarity >= threshold {
                 results.push((*id, similarity));
             }
         }
-        
+
         results.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(core::cmp::Ordering::Equal));
         results
     }
-    
+
     fn bind_memories(&mut self, id1: u64, id2: u64) -> Result<(), &'static str> {
         let mut found1 = false;
         let mut found2 = false;
-        
+
         for (id, memory) in &mut self.memories {
             if *id == id1 {
                 memory.bind_to(id2);
@@ -274,7 +285,7 @@ impl MemoryStore for InMemoryStore {
                 found2 = true;
             }
         }
-        
+
         if found1 && found2 {
             Ok(())
         } else {
@@ -298,43 +309,43 @@ impl ConsciousnessStream {
             attention_window: 7, // Magic number for attention
         }
     }
-    
+
     /// Process a stream of UTL packets
     pub fn process(&mut self, packets: Vec<Packet>) -> Result<u64, &'static str> {
         let memory = WaveMemory::from_packets(packets);
-        
+
         // Find similar memories for binding
         let similar = self.store.search_similar(&memory, 0.7);
-        
+
         // Store the new memory
         let id = self.store.store(memory)?;
-        
+
         // Bind to similar memories
         for (similar_id, _) in similar.iter().take(3) {
             self.store.bind_memories(id, *similar_id)?;
         }
-        
+
         // Update context window
         self.current_context.push(id);
         if self.current_context.len() > self.attention_window {
             self.current_context.remove(0);
         }
-        
+
         Ok(id)
     }
-    
+
     /// Recall memories similar to current thought
     pub fn recall(&self, packets: &[Packet], count: usize) -> Vec<WaveMemory> {
         let query = WaveMemory::from_packets(packets.to_vec());
         let similar = self.store.search_similar(&query, 0.5);
-        
+
         let mut memories = Vec::new();
         for (id, _) in similar.iter().take(count) {
             if let Some(memory) = self.store.retrieve(*id) {
                 memories.push(memory);
             }
         }
-        
+
         memories
     }
 }
@@ -342,32 +353,32 @@ impl ConsciousnessStream {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::utl_phonetics::{encode_compact};
-    
+    use crate::utl_phonetics::encode_compact;
+
     #[test]
     fn test_wave_memory_creation() {
         let packets = encode_compact(&["🙋", "❤️", "👤", "⧖"]);
         let memory = WaveMemory::from_packets(packets);
-        
+
         assert_eq!(memory.packets.len(), 4);
         assert_eq!(memory.wave_pattern.len(), 256);
         assert!(memory.emotional_strength > 0.0);
         assert_eq!(memory.break_indices.len(), 1); // One ⧖
     }
-    
+
     #[test]
     fn test_memory_similarity() {
         let love1 = WaveMemory::from_packets(encode_compact(&["🙋", "❤️", "👤", "⧖"]));
         let love2 = WaveMemory::from_packets(encode_compact(&["🙋", "❤️", "👤", "⧖"]));
         let hate = WaveMemory::from_packets(encode_compact(&["🙋", "😡", "👤", "⧖"]));
-        
+
         // Same thought should be highly similar
         assert!(love1.similarity(&love2) > 0.95);
-        
+
         // Different emotions should be less similar
         assert!(love1.similarity(&hate) < 0.8);
     }
-    
+
     #[test]
     fn test_consciousness_stream() {
         let store = Box::new(InMemoryStore::new());
@@ -381,10 +392,13 @@ mod tests {
         // Recall similar memories (use same or very similar memory)
         let query = encode_compact(&["🙋", "💭", "⏮", "😊", "⧖"]);
         let recalled = stream.recall(&query, 5);
-        assert!(!recalled.is_empty(), "Should recall at least one similar memory");
+        assert!(
+            !recalled.is_empty(),
+            "Should recall at least one similar memory"
+        );
         assert_eq!(recalled.len(), 1, "Should recall exactly one memory");
     }
-    
+
     #[test]
     fn test_emotional_resonance() {
         let happy = encode_compact(&["😊", "🙋", "❤️", "👤", "⧖"]);
@@ -399,9 +413,17 @@ mod tests {
         println!("Sad strength: {}", sad_mem.emotional_strength);
         println!("Neutral strength: {}", neutral_mem.emotional_strength);
 
-        assert!(happy_mem.emotional_strength > neutral_mem.emotional_strength,
-            "Happy ({}) should be > Neutral ({})", happy_mem.emotional_strength, neutral_mem.emotional_strength);
-        assert!(sad_mem.emotional_strength > neutral_mem.emotional_strength,
-            "Sad ({}) should be > Neutral ({})", sad_mem.emotional_strength, neutral_mem.emotional_strength);
+        assert!(
+            happy_mem.emotional_strength > neutral_mem.emotional_strength,
+            "Happy ({}) should be > Neutral ({})",
+            happy_mem.emotional_strength,
+            neutral_mem.emotional_strength
+        );
+        assert!(
+            sad_mem.emotional_strength > neutral_mem.emotional_strength,
+            "Sad ({}) should be > Neutral ({})",
+            sad_mem.emotional_strength,
+            neutral_mem.emotional_strength
+        );
     }
 }

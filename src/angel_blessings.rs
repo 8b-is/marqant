@@ -61,7 +61,10 @@ impl BlessingLevel {
             1 => Ok(BlessingLevel::MinorBlessings),
             2 => Ok(BlessingLevel::Harmony),
             3 => Ok(BlessingLevel::Creative),
-            _ => Err(anyhow::anyhow!("Invalid blessing level: {}. Must be 0-3.", level)),
+            _ => Err(anyhow::anyhow!(
+                "Invalid blessing level: {}. Must be 0-3.",
+                level
+            )),
         }
     }
 
@@ -181,9 +184,7 @@ impl Angel {
                 // No blessings - return as-is
                 text.to_string()
             }
-            BlessingLevel::MinorBlessings => {
-                self.apply_minor_blessings(text, &mut stats)
-            }
+            BlessingLevel::MinorBlessings => self.apply_minor_blessings(text, &mut stats),
             BlessingLevel::Harmony => {
                 // Apply minor blessings first, then harmony
                 let minor = self.apply_minor_blessings(text, &mut stats);
@@ -298,8 +299,8 @@ impl Angel {
         }
 
         // Fix list formatting
-        result = result.replace("\n*", "\n* ");  // Ensure space after bullet
-        result = result.replace("\n-", "\n- ");  // Ensure space after dash
+        result = result.replace("\n*", "\n* "); // Ensure space after bullet
+        result = result.replace("\n-", "\n- "); // Ensure space after dash
 
         result
     }
@@ -328,13 +329,12 @@ impl Angel {
 
         // Apply random variations (about 5% of the time)
         for (from, to) in variations {
-            if next_random() % 100 < 5 {
-                if result.contains(from) {
+            if next_random() % 100 < 5
+                && result.contains(from) {
                     // Replace first occurrence
                     result = result.replacen(from, to, 1);
                     stats.blessings_applied += 1;
                 }
-            }
         }
 
         result
@@ -348,7 +348,10 @@ mod tests {
     #[test]
     fn test_blessing_level_parsing() {
         assert_eq!(BlessingLevel::from_i32(0).unwrap(), BlessingLevel::Strict);
-        assert_eq!(BlessingLevel::from_i32(1).unwrap(), BlessingLevel::MinorBlessings);
+        assert_eq!(
+            BlessingLevel::from_i32(1).unwrap(),
+            BlessingLevel::MinorBlessings
+        );
         assert_eq!(BlessingLevel::from_i32(2).unwrap(), BlessingLevel::Harmony);
         assert_eq!(BlessingLevel::from_i32(3).unwrap(), BlessingLevel::Creative);
         assert!(BlessingLevel::from_i32(4).is_err());

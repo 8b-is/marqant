@@ -202,10 +202,11 @@ impl LogSummarizer {
             .to_string();
 
         // Remove UUIDs
-        pattern = regex::Regex::new(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
-            .unwrap()
-            .replace_all(&pattern, "<UUID>")
-            .to_string();
+        pattern =
+            regex::Regex::new(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
+                .unwrap()
+                .replace_all(&pattern, "<UUID>")
+                .to_string();
 
         pattern
     }
@@ -318,11 +319,7 @@ impl LogSummary {
         // Important patterns
         if !self.important.is_empty() {
             let emoji = if config.use_emojis { "🌟 " } else { "" };
-            output.push_str(&format!(
-                "{}IMPORTANT ({})\n",
-                emoji,
-                self.important.len()
-            ));
+            output.push_str(&format!("{}IMPORTANT ({})\n", emoji, self.important.len()));
 
             for entry in self.important.iter().take(config.max_per_category) {
                 output.push_str(&format!("  • {}\n", entry.line));
@@ -333,14 +330,13 @@ impl LogSummary {
         // Familiar patterns
         if !self.familiar.is_empty() && self.familiar.len() < 20 {
             let emoji = if config.use_emojis { "📝 " } else { "" };
-            output.push_str(&format!(
-                "{}FAMILIAR ({})\n",
-                emoji,
-                self.familiar.len()
-            ));
+            output.push_str(&format!("{}FAMILIAR ({})\n", emoji, self.familiar.len()));
 
             for entry in self.familiar.iter().take(config.max_per_category) {
-                output.push_str(&format!("  • {} (seen {} times)\n", entry.line, entry.count));
+                output.push_str(&format!(
+                    "  • {} (seen {} times)\n",
+                    entry.line, entry.count
+                ));
             }
             output.push('\n');
         }
@@ -350,8 +346,7 @@ impl LogSummary {
             let emoji = if config.use_emojis { "💤 " } else { "" };
             output.push_str(&format!(
                 "{}BACKGROUND NOISE (filtered {} lines)\n",
-                emoji,
-                self.noise_count
+                emoji, self.noise_count
             ));
 
             // Show top noise patterns

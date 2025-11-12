@@ -1,5 +1,5 @@
 //! UTL Phonetics - Compact binary representation of spoken consciousness
-//! 
+//!
 //! 14-bit packets in u16 for ultra-efficient storage/transmission
 
 #![cfg_attr(not(feature = "std"), no_std)]
@@ -43,7 +43,11 @@ pub struct Prosody {
 
 impl Default for Prosody {
     fn default() -> Self {
-        Self { semitone_offset: 0, grit: 0, bright: 1 }
+        Self {
+            semitone_offset: 0,
+            grit: 0,
+            bright: 1,
+        }
     }
 }
 
@@ -61,22 +65,22 @@ pub struct Phone {
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PhId {
-    Mm   = 0,   // SELF → "mm"
-    Yu   = 1,   // YOU → "yu"
-    Luv  = 2,   // LOVE → "luv"
-    Nnn  = 3,   // THINK → "nnn"
-    Mah  = 4,   // REMEMBER → "mmm-ah"
-    Tsk  = 5,   // BREAK/click → "[!]"
-    Wah  = 6,   // PAST → "wah↘"
-    Oh   = 7,   // PRESENT → "oh→"
-    Wee  = 8,   // FUTURE → "wee↗"
-    Hee  = 9,   // HAPPY → "hee"
-    Aww  = 10,  // SAD → "aww"
-    Grr  = 11,  // ANGRY → "grr"
-    Eee  = 12,  // FEAR → "eee!"
-    Uhh  = 13,  // NEUTRAL → "uhh"
-    Nn   = 14,  // AND → "nn"
-    Uh   = 15,  // Unknown/fallback
+    Mm = 0,   // SELF → "mm"
+    Yu = 1,   // YOU → "yu"
+    Luv = 2,  // LOVE → "luv"
+    Nnn = 3,  // THINK → "nnn"
+    Mah = 4,  // REMEMBER → "mmm-ah"
+    Tsk = 5,  // BREAK/click → "[!]"
+    Wah = 6,  // PAST → "wah↘"
+    Oh = 7,   // PRESENT → "oh→"
+    Wee = 8,  // FUTURE → "wee↗"
+    Hee = 9,  // HAPPY → "hee"
+    Aww = 10, // SAD → "aww"
+    Grr = 11, // ANGRY → "grr"
+    Eee = 12, // FEAR → "eee!"
+    Uhh = 13, // NEUTRAL → "uhh"
+    Nn = 14,  // AND → "nn"
+    Uh = 15,  // Unknown/fallback
 }
 
 impl PhId {
@@ -100,7 +104,7 @@ impl PhId {
             _ => PhId::Uh,
         }
     }
-    
+
     pub fn to_ascii(&self) -> &'static str {
         match self {
             PhId::Mm => "mm",
@@ -131,27 +135,41 @@ impl PhId {
 // grit:      0..3 (2 bits)
 // boundary:  0/1 (1 bit)
 
-const PH_MASK: u16     = 0b0000_0000_0000_1111;
-const SEM_SHIFT: u16   = 4;
-const SEM_MASK: u16    = 0b0000_0001_1111_0000;
-const BR_SHIFT: u16    = 9;
-const BR_MASK: u16     = 0b0000_0110_0000_0000;
-const GR_SHIFT: u16    = 11;
-const GR_MASK: u16     = 0b0001_1000_0000_0000;
-const BD_SHIFT: u16    = 13;
-const BD_MASK: u16     = 0b0010_0000_0000_0000;
+const PH_MASK: u16 = 0b0000_0000_0000_1111;
+const SEM_SHIFT: u16 = 4;
+const SEM_MASK: u16 = 0b0000_0001_1111_0000;
+const BR_SHIFT: u16 = 9;
+const BR_MASK: u16 = 0b0000_0110_0000_0000;
+const GR_SHIFT: u16 = 11;
+const GR_MASK: u16 = 0b0001_1000_0000_0000;
+const BD_SHIFT: u16 = 13;
+const BD_MASK: u16 = 0b0010_0000_0000_0000;
 
 #[inline]
 fn semitone_to_5bit_tc(v: i8) -> u16 {
-    let cl = if v < -16 { -16 } else if v > 15 { 15 } else { v };
-    let raw = if cl < 0 { (32 + cl as i16) as u8 } else { cl as u8 };
+    let cl = if v < -16 {
+        -16
+    } else if v > 15 {
+        15
+    } else {
+        v
+    };
+    let raw = if cl < 0 {
+        (32 + cl as i16) as u8
+    } else {
+        cl as u8
+    };
     (raw & 0b1_1111) as u16
 }
 
 #[inline]
 fn semitone_from_5bit_tc(bits: u16) -> i8 {
     let v = (bits & 0b1_1111) as i8;
-    if v & 0b1_0000 != 0 { (v as i16 - 32) as i8 } else { v }
+    if v & 0b1_0000 != 0 {
+        (v as i16 - 32) as i8
+    } else {
+        v
+    }
 }
 
 // -------- Compact packet type (THE MAGIC!) --------
@@ -167,7 +185,9 @@ impl Packet {
         w |= semitone_to_5bit_tc(semitone) << SEM_SHIFT;
         w |= ((bright & 0x3) as u16) << BR_SHIFT;
         w |= ((grit & 0x3) as u16) << GR_SHIFT;
-        if boundary { w |= 1 << BD_SHIFT; }
+        if boundary {
+            w |= 1 << BD_SHIFT;
+        }
         Packet(w)
     }
 
@@ -198,7 +218,9 @@ impl Packet {
         (ph, semi, bright, grit, boundary)
     }
 
-    pub fn raw(self) -> u16 { self.0 }
+    pub fn raw(self) -> u16 {
+        self.0
+    }
 }
 
 // -------- Symbol → Phone encoding --------
@@ -206,36 +228,46 @@ impl Packet {
 pub fn encode(tokens: &[&str]) -> Vec<Phone> {
     let mut phones = Vec::new();
     let mut current_prosody = Prosody::default();
-    
+
     for &tok in tokens {
         // Update prosody based on emotion/time markers
         match tok {
             "😊" => current_prosody.bright = 3,
-            "😢" => { current_prosody.bright = 1; current_prosody.semitone_offset = -5; }
+            "😢" => {
+                current_prosody.bright = 1;
+                current_prosody.semitone_offset = -5;
+            }
             "😡" => current_prosody.grit = 3,
-            "😨" => { current_prosody.bright = 2; current_prosody.semitone_offset = 8; }
-            "😐" => { current_prosody.bright = 0; current_prosody.grit = 0; current_prosody.semitone_offset = 0; }  // Neutral = flat
-            "⏮" => current_prosody.semitone_offset = -8,  // Past = falling
-            "⏺" => current_prosody.semitone_offset = 0,   // Present = steady
-            "⏭" => current_prosody.semitone_offset = 8,   // Future = rising
+            "😨" => {
+                current_prosody.bright = 2;
+                current_prosody.semitone_offset = 8;
+            }
+            "😐" => {
+                current_prosody.bright = 0;
+                current_prosody.grit = 0;
+                current_prosody.semitone_offset = 0;
+            } // Neutral = flat
+            "⏮" => current_prosody.semitone_offset = -8, // Past = falling
+            "⏺" => current_prosody.semitone_offset = 0,  // Present = steady
+            "⏭" => current_prosody.semitone_offset = 8,  // Future = rising
             _ => {}
         }
-        
+
         let ph_id = PhId::from_symbol(tok);
         let boundary = tok == "⧖";
-        
+
         phones.push(Phone {
             ph: ph_id.to_ascii(),
             boundary,
             prosody: current_prosody,
         });
-        
+
         // Reset after boundary
         if boundary {
             current_prosody = Prosody::default();
         }
     }
-    
+
     phones
 }
 
@@ -243,38 +275,54 @@ pub fn encode(tokens: &[&str]) -> Vec<Phone> {
 
 pub fn encode_compact(tokens: &[&str]) -> Vec<Packet> {
     let phones = encode(tokens);
-    phones.into_iter().map(|ph| {
-        let id = PhId::from_symbol(match ph.ph {
-            "mm" => "🙋",
-            "yu" => "👤",
-            "luv" => "❤️",
-            "nnn" => "🧠",
-            "mah" => "💭",
-            "[!]" => "⧖",
-            "wah" => "⏮",
-            "oh" => "⏺",
-            "wee" => "⏭",
-            "hee" => "😊",
-            "aww" => "😢",
-            "grr" => "😡",
-            "eee" => "😨",
-            "uhh" => "😐",
-            "nn" => "∧",
-            _ => "?",
-        });
-        Packet::pack(id, ph.prosody.semitone_offset, ph.prosody.bright, ph.prosody.grit, ph.boundary)
-    }).collect()
+    phones
+        .into_iter()
+        .map(|ph| {
+            let id = PhId::from_symbol(match ph.ph {
+                "mm" => "🙋",
+                "yu" => "👤",
+                "luv" => "❤️",
+                "nnn" => "🧠",
+                "mah" => "💭",
+                "[!]" => "⧖",
+                "wah" => "⏮",
+                "oh" => "⏺",
+                "wee" => "⏭",
+                "hee" => "😊",
+                "aww" => "😢",
+                "grr" => "😡",
+                "eee" => "😨",
+                "uhh" => "😐",
+                "nn" => "∧",
+                _ => "?",
+            });
+            Packet::pack(
+                id,
+                ph.prosody.semitone_offset,
+                ph.prosody.bright,
+                ph.prosody.grit,
+                ph.boundary,
+            )
+        })
+        .collect()
 }
 
 pub fn decode_compact(packets: &[Packet]) -> Vec<Phone> {
-    packets.iter().map(|&pk| {
-        let (id, semi, bright, grit, boundary) = pk.unpack();
-        Phone {
-            ph: id.to_ascii(),
-            boundary,
-            prosody: Prosody { semitone_offset: semi, grit, bright },
-        }
-    }).collect()
+    packets
+        .iter()
+        .map(|&pk| {
+            let (id, semi, bright, grit, boundary) = pk.unpack();
+            Phone {
+                ph: id.to_ascii(),
+                boundary,
+                prosody: Prosody {
+                    semitone_offset: semi,
+                    grit,
+                    bright,
+                },
+            }
+        })
+        .collect()
 }
 
 // -------- ASCII rendering (for debugging) --------
@@ -284,21 +332,21 @@ pub fn to_ascii_line(phones: &[Phone]) -> String {
     let mut out = String::new();
     for ph in phones {
         out.push_str(ph.ph);
-        
+
         // Add prosody markers
         if ph.prosody.semitone_offset > 0 {
             out.push('↗');
         } else if ph.prosody.semitone_offset < 0 {
             out.push('↘');
         }
-        
+
         if ph.prosody.bright > 2 {
             out.push('˜'); // Happy overlay
         }
         if ph.prosody.grit > 2 {
             out.push('!'); // Angry overlay
         }
-        
+
         if ph.boundary {
             out.push_str(" | ");
         } else {
@@ -341,11 +389,11 @@ mod tests {
     fn test_i_love_you() {
         let packets = example_i_love_you();
         assert_eq!(packets.len(), 4); // 4 symbols
-        
+
         // Each packet is just 2 bytes!
         let total_bytes = packets.len() * 2;
         assert_eq!(total_bytes, 8); // "I love you" in 8 bytes!
-        
+
         // Compare to UTF-8: "I love you" = 10 bytes
         // Compare to UTF-8 emoji: "🙋❤️👤⧖" = 13 bytes
         // We're 38% smaller than text, 62% smaller than emoji!
@@ -355,7 +403,7 @@ mod tests {
     fn test_emotional_coloring() {
         let packets = encode_compact(&["😊", "🙋", "❤️", "👤", "⧖"]);
         let phones = decode_compact(&packets);
-        
+
         // Should have bright prosody on all following phones
         assert!(phones[1].prosody.bright > 0); // "I" is happy
         assert!(phones[2].prosody.bright > 0); // "love" is happy
@@ -365,13 +413,13 @@ mod tests {
     fn test_temporal_pitch() {
         let past = encode_compact(&["⏮", "🙋", "😊", "⧖"]);
         let future = encode_compact(&["⏭", "🙋", "😊", "⧖"]);
-        
+
         let past_phones = decode_compact(&past);
         let future_phones = decode_compact(&future);
-        
+
         // Past should have falling pitch
         assert!(past_phones[1].prosody.semitone_offset < 0);
-        
+
         // Future should have rising pitch
         assert!(future_phones[1].prosody.semitone_offset > 0);
     }
@@ -381,7 +429,7 @@ mod tests {
     fn test_ascii_rendering() {
         let packets = encode_compact(&["🙋", "❤️", "👤", "⧖"]);
         let ascii = compact_to_ascii_line(&packets);
-        
+
         assert!(ascii.contains("mm"));
         assert!(ascii.contains("luv"));
         assert!(ascii.contains("yu"));

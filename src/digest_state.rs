@@ -19,6 +19,7 @@ use std::path::{Path, PathBuf};
 
 /// Digest state for a single log file
 #[derive(Debug, Clone)]
+#[derive(Default)]
 pub struct DigestState {
     /// Device ID (for inode uniqueness)
     pub dev: u64,
@@ -39,18 +40,6 @@ pub struct DigestState {
     pub baseline: HashMap<u64, u32>,
 }
 
-impl Default for DigestState {
-    fn default() -> Self {
-        Self {
-            dev: 0,
-            inode: 0,
-            last_offset: 0,
-            counts: HashMap::new(),
-            updated_unix: 0,
-            baseline: HashMap::new(),
-        }
-    }
-}
 
 impl DigestState {
     /// Create new state for a file

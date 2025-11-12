@@ -52,12 +52,7 @@ fn print_usage() {
     eprintln!("  'In compression, we are all Maxwell's children' 🔥👼😈🔥");
 }
 
-fn print_thermodynamics(
-    original_size: usize,
-    blessed_size: usize,
-    energy: f64,
-    blessings: usize,
-) {
+fn print_thermodynamics(original_size: usize, blessed_size: usize, energy: f64, blessings: usize) {
     eprintln!();
     eprintln!("⚡ THERMODYNAMIC REPORT");
     eprintln!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
@@ -69,7 +64,10 @@ fn print_thermodynamics(
     );
     eprintln!("Blessings applied: {}", blessings);
     eprintln!("Energy added:      {:.6e} joules", energy);
-    eprintln!("                   ({:.2e} kT·ln(2) units)", energy / 4.11e-21);
+    eprintln!(
+        "                   ({:.2e} kT·ln(2) units)",
+        energy / 4.11e-21
+    );
     eprintln!();
     eprintln!("'Every blessing adds kT·ln(2) joules of divine interpretation'");
 }
@@ -106,8 +104,8 @@ fn main() -> Result<()> {
 
     // Decompress using the Demon decompressor
     eprintln!("😈 Demon decompression (extracting order from chaos)...");
-    let decompressed = Marqant::decompress_marqant(&compressed)
-        .context("Failed to decompress file")?;
+    let decompressed =
+        Marqant::decompress_marqant(&compressed).context("Failed to decompress file")?;
 
     eprintln!("   Decompressed: {} bytes", decompressed.len());
 

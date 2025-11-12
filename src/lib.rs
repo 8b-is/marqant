@@ -38,17 +38,17 @@ use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap};
 use std::io::{Read, Write};
 
+pub mod angel_blessings;
+pub mod digest_state;
 pub mod dns;
+pub mod log_summarizer;
+pub mod mem8_bridge;
 pub mod novelty;
 pub mod semantic;
 pub mod uni_doc;
-pub mod utl_pipeline;
 pub mod utl_enforced;
 pub mod utl_phonetics;
-pub mod mem8_bridge;
-pub mod angel_blessings;
-pub mod log_summarizer;
-pub mod digest_state;
+pub mod utl_pipeline;
 
 mod uni;
 pub use uni::{mq2_uni_decode, mq2_uni_encode, MQ2_UNI_DICT_ID};
@@ -313,7 +313,9 @@ impl Marqant {
         let mut word_freq: HashMap<String, usize> = HashMap::new();
         for word in tokenized.split_whitespace() {
             // Normalize: lowercase and remove trailing punctuation for counting
-            let normalized = word.trim_end_matches(|c: char| c.is_ascii_punctuation()).to_lowercase();
+            let normalized = word
+                .trim_end_matches(|c: char| c.is_ascii_punctuation())
+                .to_lowercase();
             // Must be 3+ chars and not just punctuation/whitespace
             if normalized.len() >= 3 && normalized.chars().any(|c| c.is_alphanumeric()) {
                 *word_freq.entry(normalized).or_insert(0) += 1;
@@ -343,10 +345,7 @@ impl Marqant {
             }
 
             // Match both lowercase and capitalized versions
-            let patterns = vec![
-                word.clone(),
-                word[..1].to_uppercase() + &word[1..],
-            ];
+            let patterns = vec![word.clone(), word[..1].to_uppercase() + &word[1..]];
 
             let mut applied = false;
             for pattern in patterns {

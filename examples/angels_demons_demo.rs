@@ -70,7 +70,10 @@ The wave is a fundamental concept and the wave implements patterns.
     let angel_0 = Angel::new(BlessingLevel::Strict);
     let (blessed_0, stats_0) = angel_0.bless(&decompressed)?;
     println!("│ Bit-perfect reconstruction           │");
-    println!("│ Blessings applied: {}                  │", stats_0.blessings_applied);
+    println!(
+        "│ Blessings applied: {}                  │",
+        stats_0.blessings_applied
+    );
     println!("│ Energy added: {:.2e} J          │", stats_0.energy_added);
     println!("└───────────────────────────────────────┘");
     println!("Output size: {} bytes (unchanged)", blessed_0.len());
@@ -81,10 +84,17 @@ The wave is a fundamental concept and the wave implements patterns.
     let angel_1 = Angel::new(BlessingLevel::MinorBlessings);
     let (blessed_1, stats_1) = angel_1.bless(&decompressed)?;
     println!("│ Fix typos, spacing, punctuation      │");
-    println!("│ Blessings applied: {}                  │", stats_1.blessings_applied);
+    println!(
+        "│ Blessings applied: {}                  │",
+        stats_1.blessings_applied
+    );
     println!("│ Energy added: {:.2e} J          │", stats_1.energy_added);
     println!("└───────────────────────────────────────┘");
-    println!("Output size: {} bytes (Δ: {})", blessed_1.len(), stats_1.size_delta());
+    println!(
+        "Output size: {} bytes (Δ: {})",
+        blessed_1.len(),
+        stats_1.size_delta()
+    );
 
     // Show specific fixes
     if original.contains("teh") && !blessed_1.contains("teh") {
@@ -100,10 +110,17 @@ The wave is a fundamental concept and the wave implements patterns.
     let angel_2 = Angel::new(BlessingLevel::Harmony);
     let (blessed_2, stats_2) = angel_2.bless(&decompressed)?;
     println!("│ Wikipedia structure harmonization    │");
-    println!("│ Blessings applied: {}                  │", stats_2.blessings_applied);
+    println!(
+        "│ Blessings applied: {}                  │",
+        stats_2.blessings_applied
+    );
     println!("│ Energy added: {:.2e} J          │", stats_2.energy_added);
     println!("└───────────────────────────────────────┘");
-    println!("Output size: {} bytes (Δ: {})", blessed_2.len(), stats_2.size_delta());
+    println!(
+        "Output size: {} bytes (Δ: {})",
+        blessed_2.len(),
+        stats_2.size_delta()
+    );
 
     // Show category fixes
     if original.contains("[[category:") && blessed_2.contains("[[Category:") {
@@ -116,10 +133,17 @@ The wave is a fundamental concept and the wave implements patterns.
     let angel_3 = Angel::with_seed(BlessingLevel::Creative, 42);
     let (blessed_3, stats_3) = angel_3.bless(&decompressed)?;
     println!("│ Training data augmentation            │");
-    println!("│ Blessings applied: {}                  │", stats_3.blessings_applied);
+    println!(
+        "│ Blessings applied: {}                  │",
+        stats_3.blessings_applied
+    );
     println!("│ Energy added: {:.2e} J          │", stats_3.energy_added);
     println!("└───────────────────────────────────────┘");
-    println!("Output size: {} bytes (Δ: {})", blessed_3.len(), stats_3.size_delta());
+    println!(
+        "Output size: {} bytes (Δ: {})",
+        blessed_3.len(),
+        stats_3.size_delta()
+    );
     println!("(With seed 42 for reproducibility)");
     println!();
 
@@ -133,7 +157,8 @@ The wave is a fundamental concept and the wave implements patterns.
     println!("  {:.2e} joules", total_energy);
     println!();
     println!("Total blessings applied:");
-    let total_blessings = stats_1.blessings_applied + stats_2.blessings_applied + stats_3.blessings_applied;
+    let total_blessings =
+        stats_1.blessings_applied + stats_2.blessings_applied + stats_3.blessings_applied;
     println!("  {} blessings", total_blessings);
     println!();
     println!("Average energy per blessing:");
