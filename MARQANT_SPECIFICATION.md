@@ -39,6 +39,8 @@ Line 4: ~~~~
 Line 5+: <compressed_content>
 ```
 
+Note: The text representation above is the canonical, human-readable form. Reference implementations in this repository also provide concrete wire encodings (for example, the `mq2-uni` encoder builds a header like `MQ2~UNI~<ts_hex>~<orig_hex>~<comp_hex>~<tokc_hex>~text\n` and a binary `~T` section). The library's metadata reader accepts both the `MQ2~...` variants and the legacy `MARQANT` header. See the "Token Map Format" and "Metadata" sections for exact layout and dict_id computation.
+
 ### Header Fields
 - `MQ2`: Format signature (version 2)
 - `<timestamp>`: Unix timestamp (hex)
@@ -54,6 +56,17 @@ MQ2~6743A100~1000~800~50~mq~L0    # Basic compression, Level 0 decoder OK
 MQ2~6743A100~1000~600~80~mqb~L1   # Uses extended tokens, needs Level 1
 MQ2~6743A100~1000~400~A0~mqb~L2   # Full features, needs Level 2
 ```
+
+#### MQ2-UNI concrete header
+The `mq2-uni` encoder in this repository emits a deterministic header for fixed-dictionary (UNI) encodes. A typical wire layout is:
+
+```
+MQ2~UNI~<ts_hex>~<orig_hex>~<comp_hex>~<tokc_hex>~text\n
+~T<binary-token-map>\n~~~~\n
+<stream bytes>
+```
+
+This `MQ2~UNI~...~text` form is accepted by the library metadata reader and by the `mq2-uni` reference tools.
 
 ## Token Architecture
 
@@ -159,6 +172,25 @@ if content.length > rotation_threshold {
 - `~n`: Newline (when needed)
 - `~t`: Tab (when needed)
 - `~s`: Space (in token definitions only)
+
+### Concrete ~T/~S wire layout (reference encoders)
+The reference `mq2-uni` implementation and the library produce a compact `~T` section that is easier for binary parsers to read. The concrete layout used by `mq2-uni` is:
+
+- Start with the ASCII two-byte marker: `~T`
+- For each token entry (sorted by token id):
+    - 1 byte: token id (u8)
+    - 2 bytes: pattern length (big-endian u16)
+    - N bytes: pattern bytes
+- Followed by the separator: `\n~~~~\n` (six bytes) which ends the token map and precedes the token stream
+
+Example (pseudobytes): `~T 0x80 0x00 0x03 '#' ' ' '\n' 0x81 0x00 0x02 '*' '*' \n~~~~\n ...stream...`
+
+The library also accepts an optional `~S` section (secondary token map or semantic hints) using the same inline text approach; when present the reader collects the raw `~T` and `~S` payloads for dictionary identity computation.
+
+### dict_id computation
+The current library computes a dictionary identifier from the raw `~T` and `~S` payloads by concatenating them (with a `|` between `~T` and `~S` when both exist) and running the FNV-1a 64-bit hash. The resulting dict id is presented as `fnv1a64:<16-hex-digits>` in metadata and printed by the CLI when available.
+
+Note: other tooling in the repository (for example `mq2-uni/README.md`) documents alternative dict id schemes (e.g., blake3 truncation) used for DNS distribution. The canonical library currently uses FNV-1a for the local metadata identifier.
 
 ## Extension Benefits
 
@@ -347,6 +379,13 @@ fn decompress_extended(compressed: &[u8]) -> String {
     
     output
 }
+
+/// Semantic payloads
+///
+/// The repository's semantic encoder serializes semantic units into a compact binary block prefixed
+/// with the bytes `SMQ\x01` (Semantic MQ v1). When `--semantic` is used the encoder embeds these
+/// blocks inside extension sections (Level 2). Decoders that support semantic payloads should
+/// recognize the `SMQ\x01` signature and parse the unit sequence accordingly.
 ```
 
 ## Binary Format (.mqb)
