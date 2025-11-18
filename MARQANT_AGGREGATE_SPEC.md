@@ -38,6 +38,10 @@ T01API Reference
 ...compressed content...
 ```
 
+Notes:
+- Aggregate files in the repository commonly use the legacy `MARQANT <ts> <orig> <comp> [flags]` header (see `testy/*.mq`), and the library's metadata reader accepts both `MQ2~...` and `MARQANT ...` header forms.
+- The `::file:path::` markers shown above are recognized by the library's extractor (`mq extract`/`mq list`) and are the canonical way the aggregator separates embedded files. The manifest uses byte offsets relative to the start of the compressed content section.
+
 ## Key Features
 
 ### 1. File Manifest

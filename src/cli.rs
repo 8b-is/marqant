@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use anyhow::{anyhow, Context, Result};
 
 use marqant::{
-    digest_state::{fhash, DigestState},
+    digest_state::{DigestState, fhash},
     log_summarizer::{LogSummarizer, SummarizerConfig},
     mq2_uni_decode, mq2_uni_encode, read_mq_metadata, Marqant, MQ2_UNI_DICT_ID,
 };
@@ -322,13 +322,12 @@ Usage:\n\
   mq decompress <input.mq> [-o <output.md>]\n\
   mq analyze <input.md>\n\
   mq inspect <input.mq> [--show-tokens]\n\
-  mq tail [<file>] [-n <lines>] [-D] [--raw] [--threshold <0.0-1.0>]\n\n\
+  mq tail [<file>] [-n <lines>] [-D] [--raw]\n\n\
 If <input> omitted, reads stdin. Writes to stdout if -o omitted.\n\n\
 Smart Tail:\n\
   Drop-in tail replacement with AI-powered log summarization.\n\
   -D, --delta    Delta mode: only show changes since last run (stateful)\n\
-  --raw          Classic tail behavior (no summarization)\n\
-  --threshold    Novelty threshold (0.0-1.0, default: 0.1)\n\n\
+  --raw          Classic tail behavior (no summarization)\n\n\
   Tip: alias tail='mq tail' for automatic smart logs everywhere!\n\n\
 Delta Mode (-D):\n\
   Stateful analysis that tracks what you've seen before:\n\
@@ -360,21 +359,15 @@ fn run_smart_tail(mut args: impl Iterator<Item = String>) -> Result<()> {
                 let Some(n) = args.next() else {
                     return Err(anyhow!("missing value for {arg}"));
                 };
-                num_lines = n.parse().with_context(|| format!("invalid number: {n}"))?;
+                num_lines = n
+                    .parse()
+                    .with_context(|| format!("invalid number: {n}"))?;
             }
             "-D" | "--delta" => {
                 delta_mode = true;
             }
             "--raw" => {
                 raw_mode = true;
-            }
-            "--threshold" => {
-                let Some(t) = args.next() else {
-                    return Err(anyhow!("missing value for --threshold"));
-                };
-                config.novelty_threshold = t
-                    .parse()
-                    .with_context(|| format!("invalid threshold: {t}"))?;
             }
             "--no-emoji" => {
                 config.use_emojis = false;
@@ -416,11 +409,7 @@ fn run_smart_tail(mut args: impl Iterator<Item = String>) -> Result<()> {
 }
 
 /// Run delta mode - only show changes since last run
-fn run_delta_mode(
-    path: &std::path::Path,
-    lines: &[String],
-    config: &SummarizerConfig,
-) -> Result<()> {
+fn run_delta_mode(path: &std::path::Path, lines: &[String], config: &SummarizerConfig) -> Result<()> {
     // Load or create digest state
     let mut state = DigestState::load_or_create(path)?;
 
@@ -472,23 +461,19 @@ fn run_delta_mode(
 
     // Format output
     let emoji = config.use_emojis;
-    println!("📊 delta (since {}, {} lines)", last_updated, lines.len());
+    println!(
+        "📊 delta (since {}, {} lines)",
+        last_updated,
+        lines.len()
+    );
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
 
     // Novel patterns
     if !novel_patterns.is_empty() {
         let icon = if emoji { "💎 " } else { "" };
-        println!(
-            "{}brand-new pattern{}",
-            icon,
-            if novel_patterns.len() == 1 { "" } else { "s" }
-        );
-        for (i, pattern) in novel_patterns.iter().take(10).enumerate() {
-            if i == 0 {
-                println!("  • {} (first seen)", pattern);
-            } else {
-                println!("  • {}", pattern);
-            }
+        println!("{}brand-new pattern{}", icon, if novel_patterns.len() == 1 { "" } else { "s" });
+        for pattern in novel_patterns.iter().take(10) {
+            println!("  • {} (first seen)", pattern);
         }
         println!();
     }
@@ -529,9 +514,8 @@ fn run_delta_mode(
 /// Read last N lines from file or stdin
 fn read_tail_lines(path: Option<&std::path::Path>, num_lines: usize) -> Result<Vec<String>> {
     let content = match path {
-        Some(p) => {
-            fs::read_to_string(p).with_context(|| format!("failed reading {}", p.display()))?
-        }
+        Some(p) => fs::read_to_string(p)
+            .with_context(|| format!("failed reading {}", p.display()))?,
         None => {
             let mut buf = String::new();
             io::stdin().read_to_string(&mut buf)?;
