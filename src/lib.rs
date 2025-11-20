@@ -306,7 +306,7 @@ impl Marqant {
             }
         }
 
-        let mut token_counter = 0x1Bu8;
+        let mut token_counter = 0x80u8;
 
         // PHASE 1: Tokenize high-frequency SINGLE words FIRST
         // This prevents phrases from blocking individual word tokens
