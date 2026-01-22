@@ -329,12 +329,11 @@ impl Angel {
 
         // Apply random variations (about 5% of the time)
         for (from, to) in variations {
-            if next_random() % 100 < 5
-                && result.contains(from) {
-                    // Replace first occurrence
-                    result = result.replacen(from, to, 1);
-                    stats.blessings_applied += 1;
-                }
+            if next_random() % 100 < 5 && result.contains(from) {
+                // Replace first occurrence
+                result = result.replacen(from, to, 1);
+                stats.blessings_applied += 1;
+            }
         }
 
         result

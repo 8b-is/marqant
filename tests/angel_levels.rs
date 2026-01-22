@@ -29,8 +29,8 @@ fn level0_returns_exact_input() {
     let inputs = vec![
         "Hello World",
         "This  has  double  spaces",
-        "teh quick brown fox",  // typo should NOT be fixed
-        "[[category:test]]",     // wiki should NOT be fixed
+        "teh quick brown fox", // typo should NOT be fixed
+        "[[category:test]]",   // wiki should NOT be fixed
         "  leading and trailing  ",
         "\n\n\n\nMultiple newlines\n\n\n\n",
         "Space before punctuation . , ! ?",
@@ -43,7 +43,10 @@ fn level0_returns_exact_input() {
             "Level 0 MUST return exact input. Got '{}' for '{}'",
             output, input
         );
-        assert_eq!(stats.blessings_applied, 0, "Level 0 MUST apply zero blessings");
+        assert_eq!(
+            stats.blessings_applied, 0,
+            "Level 0 MUST apply zero blessings"
+        );
     }
 }
 
@@ -55,7 +58,7 @@ fn level0_preserves_unicode() {
         "émojis: 🎉🔥👼😈",
         "Mixed: Hello 世界 🌍",
         "RTL: مرحبا بالعالم",
-        "Combining: café vs café",  // Different unicode representations
+        "Combining: café vs café", // Different unicode representations
     ];
 
     for input in inputs {
@@ -189,16 +192,28 @@ fn level2_fixes_wiki_categories() {
 
     // Test individual category fixes
     let (output, _) = angel.bless("[[category:Test]]").unwrap();
-    assert!(output.contains("[[Category:Test]]"), "Should fix lowercase category");
+    assert!(
+        output.contains("[[Category:Test]]"),
+        "Should fix lowercase category"
+    );
 
     let (output, _) = angel.bless("[[CATEGORY:Other]]").unwrap();
-    assert!(output.contains("[[Category:Other]]"), "Should fix uppercase category");
+    assert!(
+        output.contains("[[Category:Other]]"),
+        "Should fix uppercase category"
+    );
 
     // Note: Harmony mode also removes spaces around wikilinks
     // So "]] and [[" becomes "]]and[["
     let (output, _) = angel.bless("[[category:a]] and [[CATEGORY:b]]").unwrap();
-    assert!(output.contains("[[Category:a]]"), "Should fix first category");
-    assert!(output.contains("[[Category:b]]"), "Should fix second category");
+    assert!(
+        output.contains("[[Category:a]]"),
+        "Should fix first category"
+    );
+    assert!(
+        output.contains("[[Category:b]]"),
+        "Should fix second category"
+    );
 }
 
 #[test]
@@ -252,9 +267,14 @@ fn level3_includes_all_previous_levels() {
     let (output, _) = angel.bless("[[category:test]] has teh typo").unwrap();
 
     // Must fix wiki and typo (creative variations may or may not apply)
-    assert!(output.contains("[[Category:test]]"), "Should fix wiki category");
-    assert!(output.contains("the typo") || output.contains("this typo"),
-            "Should fix typo (possibly with variation)");
+    assert!(
+        output.contains("[[Category:test]]"),
+        "Should fix wiki category"
+    );
+    assert!(
+        output.contains("the typo") || output.contains("this typo"),
+        "Should fix typo (possibly with variation)"
+    );
 }
 
 #[test]
@@ -269,8 +289,10 @@ fn level3_same_seed_is_reproducible() {
     for _ in 0..10 {
         let angel = Angel::with_seed(BlessingLevel::Creative, seed);
         let (output, _) = angel.bless(input).unwrap();
-        assert_eq!(output, first_output,
-                   "Level 3 with same seed MUST be reproducible");
+        assert_eq!(
+            output, first_output,
+            "Level 3 with same seed MUST be reproducible"
+        );
     }
 }
 
@@ -320,13 +342,18 @@ fn blessings_are_cumulative() {
     let (out2, stats2) = angel2.bless(input).unwrap();
     assert!(out2.contains("[[Category:test]]"), "L2 should fix wiki");
     assert!(out2.contains("the typos"), "L2 should include L1 typo fix");
-    assert!(stats2.blessings_applied >= stats1.blessings_applied,
-            "L2 should apply at least as many blessings as L1");
+    assert!(
+        stats2.blessings_applied >= stats1.blessings_applied,
+        "L2 should apply at least as many blessings as L1"
+    );
 
     // Level 3: Includes all above (may add variations)
     let angel3 = Angel::with_seed(BlessingLevel::Creative, 42);
     let (out3, _stats3) = angel3.bless(input).unwrap();
-    assert!(out3.contains("[[Category:test]]"), "L3 should include L2 wiki fix");
+    assert!(
+        out3.contains("[[Category:test]]"),
+        "L3 should include L2 wiki fix"
+    );
 }
 
 // =============================================================================
@@ -359,8 +386,10 @@ fn thermodynamics_positive_for_blessings() {
     // At room temp (293.15K), kT*ln(2) ≈ 2.8e-21 J
     let expected_energy_per_bit = 1.380649e-23 * 293.15 * 2_f64.ln();
     let expected_energy = stats.blessings_applied as f64 * expected_energy_per_bit;
-    assert!((stats.energy_added - expected_energy).abs() < 1e-25,
-            "Energy calculation mismatch");
+    assert!(
+        (stats.energy_added - expected_energy).abs() < 1e-25,
+        "Energy calculation mismatch"
+    );
 }
 
 #[test]
@@ -441,10 +470,22 @@ More  text  here ."#;
 
 #[test]
 fn blessing_level_parsing() {
-    assert!(matches!(BlessingLevel::from_i32(0), Ok(BlessingLevel::Strict)));
-    assert!(matches!(BlessingLevel::from_i32(1), Ok(BlessingLevel::MinorBlessings)));
-    assert!(matches!(BlessingLevel::from_i32(2), Ok(BlessingLevel::Harmony)));
-    assert!(matches!(BlessingLevel::from_i32(3), Ok(BlessingLevel::Creative)));
+    assert!(matches!(
+        BlessingLevel::from_i32(0),
+        Ok(BlessingLevel::Strict)
+    ));
+    assert!(matches!(
+        BlessingLevel::from_i32(1),
+        Ok(BlessingLevel::MinorBlessings)
+    ));
+    assert!(matches!(
+        BlessingLevel::from_i32(2),
+        Ok(BlessingLevel::Harmony)
+    ));
+    assert!(matches!(
+        BlessingLevel::from_i32(3),
+        Ok(BlessingLevel::Creative)
+    ));
     assert!(BlessingLevel::from_i32(4).is_err());
     assert!(BlessingLevel::from_i32(-1).is_err());
 }

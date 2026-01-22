@@ -131,9 +131,21 @@ impl LogSummarizer {
         }
 
         // Deduplicate and sort by novelty
-        revolutionary.sort_by(|a, b| b.novelty.partial_cmp(&a.novelty).unwrap_or(std::cmp::Ordering::Equal));
-        important.sort_by(|a, b| b.novelty.partial_cmp(&a.novelty).unwrap_or(std::cmp::Ordering::Equal));
-        familiar.sort_by(|a, b| b.novelty.partial_cmp(&a.novelty).unwrap_or(std::cmp::Ordering::Equal));
+        revolutionary.sort_by(|a, b| {
+            b.novelty
+                .partial_cmp(&a.novelty)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
+        important.sort_by(|a, b| {
+            b.novelty
+                .partial_cmp(&a.novelty)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
+        familiar.sort_by(|a, b| {
+            b.novelty
+                .partial_cmp(&a.novelty)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
 
         // Deduplicate by pattern
         revolutionary = Self::deduplicate_entries(revolutionary);
@@ -180,15 +192,11 @@ impl LogSummarizer {
     /// Extract pattern from log line (remove variable parts)
     fn extract_pattern(&self, line: &str) -> String {
         // Compile regex patterns once using lazy_static
-        static TIMESTAMP_RE: Lazy<Regex> = Lazy::new(|| {
-            Regex::new(r"\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2}:\d{2}").unwrap()
-        });
-        static IP_RE: Lazy<Regex> = Lazy::new(|| {
-            Regex::new(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}").unwrap()
-        });
-        static NUM_RE: Lazy<Regex> = Lazy::new(|| {
-            Regex::new(r"\b\d+\b").unwrap()
-        });
+        static TIMESTAMP_RE: Lazy<Regex> =
+            Lazy::new(|| Regex::new(r"\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2}:\d{2}").unwrap());
+        static IP_RE: Lazy<Regex> =
+            Lazy::new(|| Regex::new(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}").unwrap());
+        static NUM_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\b\d+\b").unwrap());
         static UUID_RE: Lazy<Regex> = Lazy::new(|| {
             Regex::new(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}").unwrap()
         });
@@ -196,7 +204,9 @@ impl LogSummarizer {
         let mut pattern = line.to_string();
 
         // Remove timestamps (ISO 8601, syslog, etc.)
-        pattern = TIMESTAMP_RE.replace_all(&pattern, "<TIMESTAMP>").to_string();
+        pattern = TIMESTAMP_RE
+            .replace_all(&pattern, "<TIMESTAMP>")
+            .to_string();
 
         // Remove IPs
         pattern = IP_RE.replace_all(&pattern, "<IP>").to_string();
@@ -318,11 +328,7 @@ impl LogSummary {
         // Important patterns
         if !self.important.is_empty() {
             let emoji = if config.use_emojis { "🌟 " } else { "" };
-            output.push_str(&format!(
-                "{}IMPORTANT ({})\n",
-                emoji,
-                self.important.len()
-            ));
+            output.push_str(&format!("{}IMPORTANT ({})\n", emoji, self.important.len()));
 
             for entry in self.important.iter().take(config.max_per_category) {
                 output.push_str(&format!("  • {}\n", entry.line));
@@ -333,14 +339,13 @@ impl LogSummary {
         // Familiar patterns
         if !self.familiar.is_empty() && self.familiar.len() < 20 {
             let emoji = if config.use_emojis { "📝 " } else { "" };
-            output.push_str(&format!(
-                "{}FAMILIAR ({})\n",
-                emoji,
-                self.familiar.len()
-            ));
+            output.push_str(&format!("{}FAMILIAR ({})\n", emoji, self.familiar.len()));
 
             for entry in self.familiar.iter().take(config.max_per_category) {
-                output.push_str(&format!("  • {} (seen {} times)\n", entry.line, entry.count));
+                output.push_str(&format!(
+                    "  • {} (seen {} times)\n",
+                    entry.line, entry.count
+                ));
             }
             output.push('\n');
         }
@@ -350,8 +355,7 @@ impl LogSummary {
             let emoji = if config.use_emojis { "💤 " } else { "" };
             output.push_str(&format!(
                 "{}BACKGROUND NOISE (filtered {} lines)\n",
-                emoji,
-                self.noise_count
+                emoji, self.noise_count
             ));
 
             // Show top noise patterns
