@@ -32,6 +32,9 @@ pub struct SummarizerConfig {
 
     /// Use emojis in output
     pub use_emojis: bool,
+
+    /// Use high-density natural formatting for AI
+    pub natural: bool,
 }
 
 impl Default for SummarizerConfig {
@@ -40,6 +43,7 @@ impl Default for SummarizerConfig {
             show_noise: true,
             max_per_category: 10,
             use_emojis: true,
+            natural: false,
         }
     }
 }
@@ -299,9 +303,53 @@ impl LogSummarizer {
 }
 
 impl LogSummary {
+    /// Format summary using high-density natural sigils for AI
+    fn format_natural(&self, config: &SummarizerConfig) -> String {
+        let mut output = String::new();
+        output.push_str("[MQ_LOG_DIGEST_v1]\n");
+        output.push_str(&format!("[TOTAL_LINES: {}]\n", self.total_lines));
+        output.push_str("[MAP: §=NOVEL, ¶=IMPORTANT, ‡=FAMILIAR, 💤=NOISE, ⧖=DELAY]\n---\n\n");
+
+        if !self.revolutionary.is_empty() {
+            output.push_str(&format!("§ {} novel patterns:\n", self.revolutionary.len()));
+            for entry in self.revolutionary.iter().take(config.max_per_category) {
+                output.push_str(&format!("  • {}\n", entry.line));
+            }
+        }
+
+        if !self.important.is_empty() {
+            output.push_str(&format!("¶ {} important patterns:\n", self.important.len()));
+            for entry in self.important.iter().take(config.max_per_category) {
+                output.push_str(&format!("  • {}\n", entry.line));
+            }
+        }
+
+        if !self.familiar.is_empty() {
+            output.push_str(&format!("‡ {} familiar patterns:\n", self.familiar.len()));
+            for entry in self.familiar.iter().take(config.max_per_category) {
+                output.push_str(&format!("  • {} (x{})\n", entry.line, entry.count));
+            }
+        }
+
+        if self.noise_count > 0 {
+            output.push_str(&format!("💤 {} lines noise suppressed\n", self.noise_count));
+            for (pattern, count) in self.noise.iter().take(3) {
+                output.push_str(&format!("  • {}: x{}\n", pattern, count));
+            }
+        }
+
+        output.push_str("\n⧖ [EOF]");
+        output
+    }
+
     /// Format summary as human-readable text
     pub fn format(&self, config: &SummarizerConfig) -> String {
+        if config.natural {
+            return self.format_natural(config);
+        }
+
         let mut output = String::new();
+        // ... existing implementation remains below ...
 
         // Header
         output.push_str(&format!(

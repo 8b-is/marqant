@@ -303,6 +303,14 @@ pub fn run_cli() -> Result<()> {
                 }
             }
         }
+        "tree" => {
+            let mut path: PathBuf = std::env::current_dir()?;
+            if let Some(arg) = args.next() {
+                path = PathBuf::from(arg);
+            }
+            let output = marqant::SmartTree::generate(&path)?;
+            println!("{}", output);
+        }
         "tail" => {
             run_smart_tail(args)?;
         }
@@ -322,12 +330,14 @@ Usage:\n\
   mq decompress <input.mq> [-o <output.md>]\n\
   mq analyze <input.md>\n\
   mq inspect <input.mq> [--show-tokens]\n\
-  mq tail [<file>] [-n <lines>] [-D] [--raw]\n\n\
+  mq tree [<dir>]\n\
+  mq tail [<file>] [-n <lines>] [-D] [--raw] [--natural]\n\n\
 If <input> omitted, reads stdin. Writes to stdout if -o omitted.\n\n\
 Smart Tail:\n\
   Drop-in tail replacement with AI-powered log summarization.\n\
   -D, --delta    Delta mode: only show changes since last run (stateful)\n\
-  --raw          Classic tail behavior (no summarization)\n\n\
+  --raw          Classic tail behavior (no summarization)\n\
+  --natural      High-density natural formatting for AI (sigils §, ¶, ‡)\n\n\
   Tip: alias tail='mq tail' for automatic smart logs everywhere!\n\n\
 Delta Mode (-D):\n\
   Stateful analysis that tracks what you've seen before:\n\
@@ -366,6 +376,9 @@ fn run_smart_tail(mut args: impl Iterator<Item = String>) -> Result<()> {
             }
             "--raw" => {
                 raw_mode = true;
+            }
+            "--natural" => {
+                config.natural = true;
             }
             "--no-emoji" => {
                 config.use_emojis = false;
@@ -462,6 +475,35 @@ fn run_delta_mode(
     state.save(path)?;
 
     // Format output
+    if config.natural {
+        println!("[MQ_DELTA_DIGEST_v1]");
+        println!("[SINCE: {}]", last_updated);
+        println!("[MAP: §=NOVEL, ¶=ANOMALY, ‡=SUPPRESSED, ⧖=DELAY]");
+        println!("---");
+
+        if !novel_patterns.is_empty() {
+            println!("§ {} brand-new patterns", novel_patterns.len());
+            for pattern in novel_patterns.iter().take(5) {
+                println!("  • {}", pattern);
+            }
+        }
+
+        if !anomalies.is_empty() {
+            println!("¶ {} anomalies vs baseline", anomalies.len());
+            for (pattern, mult) in anomalies.iter().take(5) {
+                println!("  • {} (↑{:.1}x)", pattern, mult);
+            }
+        }
+
+        if !suppressed.is_empty() {
+            let total_suppressed: usize = suppressed.values().sum();
+            println!("‡ {} lines suppressed", total_suppressed);
+        }
+
+        println!("\n⧖ [EOF]");
+        return Ok(());
+    }
+
     let emoji = config.use_emojis;
     println!("📊 delta (since {}, {} lines)", last_updated, lines.len());
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");

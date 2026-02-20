@@ -1,4 +1,4 @@
-//! Universal Theoglyphic Language Pipeline
+//! Universal Language Pipeline
 //! Correct flow: Raw → UTL → Analysis/Storage → Human(lang)
 
 use anyhow::Result;
@@ -41,23 +41,23 @@ impl UTLPipeline {
     pub fn translate_to_utl(raw_text: &str) -> Result<String> {
         let mut utl = String::new();
 
-        // Parse sentences and convert to theoglyphic symbols
+        // Parse sentences and convert to unitoken symbols
         for sentence in raw_text.split('.') {
             let sentence = sentence.trim();
             if sentence.is_empty() {
                 continue;
             }
 
-            // Convert each concept to its theoglyphic representation
-            utl.push_str(&Self::text_to_theoglyphs(sentence));
-            utl.push_str(" ⧖ "); // Add UDC delay marker between thoughts
+            // Convert each concept to its unitoken representation
+            utl.push_str(&Self::text_to_univeral_tokens(sentence));
+            utl.push_str(" ⧖ "); // Add natural delay marker between thoughts
         }
 
         Ok(utl)
     }
 
-    /// Convert text concepts to theoglyphic symbols
-    fn text_to_theoglyphs(text: &str) -> String {
+    /// Convert text concepts to unitoken symbols
+    fn text_to_univeral_tokens(text: &str) -> String {
         let lower = text.to_lowercase();
         let mut glyphs = Vec::new();
 

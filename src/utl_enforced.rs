@@ -99,7 +99,7 @@ impl Translate<RawText, UtlDoc> for RawToUtl {
 
         let mut tokens = Vec::new();
 
-        // Real UTL tokenization with theoglyphic symbols
+        // Real UTL tokenization with universal symbols
         for sentence in input.0.split('.') {
             let sentence = sentence.trim().to_lowercase();
             if sentence.is_empty() {
@@ -143,7 +143,7 @@ impl Translate<RawText, UtlDoc> for RawToUtl {
                 tokens.push("⏭".to_string()); // Future
             }
 
-            // Add UDC delay marker between thoughts
+            // Add natural delay marker between thoughts
             tokens.push("⧖".to_string());
         }
 
@@ -329,7 +329,7 @@ pub fn analyze_utl(doc: &mut UtlDoc) -> Result<()> {
         genre: genre.to_string(),
         temporal: temporal.to_string(),
         emotion: emotion.to_string(),
-        delay_ms: 250, // UDC delay
+        delay_ms: 250, // natural delay
     });
 
     Ok(())

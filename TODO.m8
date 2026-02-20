@@ -40,7 +40,7 @@
 ## 🎯 Next Steps
 
 1. **Real UTL Tokenizer**
-   - Replace placeholder with actual theoglyphic parser
+   - Replace placeholder with actual universal parser
    - Handle nested concepts
    - Support recursive symbols
 

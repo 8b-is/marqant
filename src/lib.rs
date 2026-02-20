@@ -39,13 +39,14 @@ use std::collections::{BinaryHeap, HashMap};
 use std::io::{Read, Write};
 
 pub mod angel_blessings;
+pub mod bridge;
+pub mod data_bridge;
 pub mod digest_state;
 pub mod dns;
 pub mod log_summarizer;
 pub mod mem8_bridge;
 pub mod novelty;
 pub mod semantic;
-pub mod uni_doc;
 pub mod utl_enforced;
 pub mod utl_phonetics;
 pub mod utl_pipeline;
@@ -646,7 +647,7 @@ fn escape_xml(s: &str) -> String {
         .replace('>', "&gt;")
 }
 
-fn fnv1a64(s: &str) -> u64 {
+pub fn fnv1a64(s: &str) -> u64 {
     const FNV_OFFSET: u64 = 0xcbf29ce484222325;
     const FNV_PRIME: u64 = 0x00000100000001B3;
     let mut h = FNV_OFFSET;
@@ -655,6 +656,91 @@ fn fnv1a64(s: &str) -> u64 {
         h = h.wrapping_mul(FNV_PRIME);
     }
     h
+}
+
+// --------------------
+// Smart Tree (TREE_HEX_V1)
+// --------------------
+
+pub struct SmartTree;
+
+impl SmartTree {
+    pub fn generate(path: &std::path::Path) -> Result<String> {
+        let mut output = String::new();
+        output.push_str("TREE_HEX_V1:\n");
+        output.push_str(&format!("CONTEXT: {}\n", path.display()));
+        
+        let hash = fnv1a64(&path.to_string_lossy());
+        output.push_str(&format!("HASH: {:016x}\n", hash));
+
+        Self::walk(path, 0, &mut output)?;
+        
+        output.push_str("END_AI\n");
+        Ok(output)
+    }
+
+    fn walk(path: &std::path::Path, depth: usize, output: &mut String) -> Result<()> {
+        let entries = std::fs::read_dir(path)?;
+        let mut sorted_entries: Vec<_> = entries.filter_map(|e| e.ok()).collect();
+        sorted_entries.sort_by_key(|e| e.file_name());
+
+        for entry in sorted_entries {
+            let metadata = entry.metadata()?;
+            let file_name = entry.file_name();
+            let name = file_name.to_string_lossy();
+            
+            // Skip hidden files/dirs like .git
+            if name.starts_with('.') {
+                continue;
+            }
+
+            let is_dir = metadata.is_dir();
+            let mode = if is_dir { 0o755 } else { 0o644 }; // Mocking for now, could use MetadataExt
+            let size = if is_dir { 0 } else { metadata.len() };
+            let ts = metadata.modified()?.duration_since(std::time::UNIX_EPOCH)?.as_secs();
+            
+            let icon = if is_dir {
+                "📁"
+            } else if name.ends_with(".mq") || name.ends_with(".mqc") || name.ends_with(".mqa") {
+                "🧠"
+            } else if name.ends_with(".rs") {
+                "🦀"
+            } else if name.ends_with(".sh") {
+                "🐚"
+            } else if name == "Cargo.toml" || name == "Cargo.lock" {
+                "🔧"
+            } else if name == "LICENSE" {
+                "📜"
+            } else {
+                "📝"
+            };
+            
+            // Mock UID/GID for portability or use MetadataExt if on Unix
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::MetadataExt;
+                let uid = metadata.uid();
+                let gid = metadata.gid();
+                output.push_str(&format!(
+                    "{} {:o} {:04x} {:04x} {:08x} {:08x} {} {}\n",
+                    depth, mode, uid, gid, size, ts, icon, name
+                ));
+            }
+            #[cfg(not(unix))]
+            {
+                output.push_str(&format!(
+                    "{} {:o} 0000 0000 {:08x} {:08x} {} {}\n",
+                    depth, mode, size, ts, icon, name
+                ));
+            }
+
+            if is_dir {
+                Self::walk(&entry.path(), depth + 1, output)?;
+            }
+        }
+
+        Ok(())
+    }
 }
 
 // --------------------
