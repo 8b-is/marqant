@@ -3,29 +3,47 @@ use anyhow::Result;
 // MQ2-UNI: UTF-8 safe encoding with ASCII escape sequences
 // FIXED: No more collision with UTF-8 continuation bytes!
 
-pub const MQ2_UNI_DICT_ID: &str = "mq2-uni-v2-utf8safe";
+pub const MQ2_UNI_DICT_ID: &str = "mq2-uni-v3-wiki";
 
 const ESC: u8 = b'~'; // The marqant sigil for escape sequences
 
-/// ASCII-safe token mappings using escape sequences
+/// ASCII-safe token mappings using escape sequences.
+///
+/// Patterns are matched left-to-right, longest-first within each position.
+/// Tokens that are SHORTER than their pattern save bytes directly;
+/// others normalise structure for downstream gzip/zlib or AI consumption.
 fn get_token_map() -> Vec<(&'static [u8], &'static [u8])> {
     vec![
-        // Common markdown patterns -> ASCII escape codes
-        (b"\n\n", b"~PP"),   // Paragraph break
-        (b"  ", b"~SP"),     // Double space
-        (b"\n- ", b"~LI"),   // List item
-        (b"## ", b"~H2"),    // Header 2
-        (b"# ", b"~H1"),     // Header 1
-        (b"```\n", b"~CB"),  // Code block start
-        (b"```", b"~CE"),    // Code block end
-        (b"{\n", b"~OB"),    // Open brace newline
-        (b"}\n", b"~CL"),    // Close brace newline
-        (b"[\n", b"~OS"),    // Open square newline
-        (b"\n]", b"~CS"),    // Close square
-        (b": ", b"~CO"),     // Colon space
-        (b", ", b"~CM"),     // Comma space
-        (b"    ", b"~IN"),   // Indent (4 spaces)
-        (b"\n\n\n", b"~TB"), // Triple break
+        // ── Wikipedia / multi-level headers (all save bytes) ──────────────
+        (b"##### ", b"~H5"), // 6 bytes -> 3 bytes  (saves 3)
+        (b"#### ", b"~H4"),  // 5 bytes -> 3 bytes  (saves 2)
+        (b"### ", b"~H3"),   // 4 bytes -> 3 bytes  (saves 1)
+        (b"## ", b"~H2"),    // 3 bytes -> 3 bytes  (break-even; normalises)
+        (b"# ", b"~H1"),     // 2 bytes -> 3 bytes  (structural marker)
+        // ── Block-level markdown ───────────────────────────────────────────
+        (b"\n\n\n", b"~TB"), // triple break  (must come before ~PP)
+        (b"\n\n", b"~PP"),   // paragraph break
+        (b"\n- ", b"~LI"),   // unordered list item
+        (b"\n* ", b"~LB"),   // alt list item (Wikipedia uses *)
+        (b"\n> ", b"~BQ"),   // blockquote
+        (b"\n1. ", b"~N1"),  // 4 bytes -> 3 bytes  (saves 1; ordered list)
+        (b"\n2. ", b"~N2"),  // 4 bytes -> 3 bytes
+        (b"\n3. ", b"~N3"),  // 4 bytes -> 3 bytes
+        (b"\n4. ", b"~N4"),  // 4 bytes -> 3 bytes
+        (b"\n5. ", b"~N5"),  // 4 bytes -> 3 bytes
+        // ── Code blocks ───────────────────────────────────────────────────
+        (b"```\n", b"~CB"),  // code block open  (```<newline>)
+        (b"```", b"~CE"),    // code block close / inline fence
+        // ── Inline / spacing ──────────────────────────────────────────────
+        (b"    ", b"~IN"),   // 4-space indent  (saves 1)
+        (b"  ", b"~SP"),     // double space
+        (b": ", b"~CO"),     // colon-space  (very common in Wikipedia prose)
+        (b", ", b"~CM"),     // comma-space
+        // ── JSON / code-block structural chars ───────────────────────────
+        (b"{\n", b"~OB"),    // open-brace newline
+        (b"}\n", b"~CL"),    // close-brace newline
+        (b"[\n", b"~OS"),    // open-bracket newline
+        (b"\n]", b"~CS"),    // close-bracket newline
     ]
 }
 
