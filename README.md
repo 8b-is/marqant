@@ -21,6 +21,44 @@ After Marqant: 69,745 bytes of pure semantic essence
 Compression: 93.3% 🤯
 ```
 
+## ✨ New in v1.2.0: Wikipedia-Scale Compression 📚
+
+### 🌐 **Proven on Wikipedia-Format Markdown**
+Marqant has been benchmarked against realistic Wikipedia-scale content across multiple
+compression modes.  Results on a 58 KB mixed-topic corpus:
+
+| Mode | Ratio | Use case |
+|------|-------|---------|
+| `uni-encode` | ~101% | Lossless, ASCII-safe streaming |
+| `compress` | ~98% | Lightweight semantic tokenisation |
+| `compress --binary` | **17–64%** | Full compression (recommended) |
+| `compress --binary --semantic` | **35% overall** | Maximum compression + structure |
+
+> Large repetitive corpora (e.g., Wikipedia dumps) reach **<20% of original size** with
+> `--binary` mode — over 80% reduction!
+
+### 🆕 **Enhanced Token Dictionary (v3-wiki)**
+The `uni-encode` streaming path now includes Wikipedia-optimised static tokens:
+
+- **`### `** (H3), **`#### `** (H4), **`##### `** (H5) — saves 1–3 bytes per heading
+- **`\n* `** — alternative unordered list style (GitHub/Wikipedia)
+- **`\n> `** — blockquote normalisation
+- **`\n1.`–`\n5.`** — ordered list items save 1 byte each
+
+### 📋 **`scripts/manage.sh`** — Easy project management
+```bash
+./scripts/manage.sh build          # debug build
+./scripts/manage.sh build-release  # optimised build
+./scripts/manage.sh test           # run tests
+./scripts/manage.sh test-wiki      # Wikipedia compression tests
+./scripts/manage.sh bench          # benchmark all fixture files
+./scripts/manage.sh compress file.md  # show all-mode ratios for a file
+./scripts/manage.sh bump-patch     # bump x.y.Z
+./scripts/manage.sh bump-minor     # bump x.Y.0
+./scripts/manage.sh bump-major     # bump X.0.0
+./scripts/manage.sh release        # build release + print tag instructions
+```
+
 ## ✨ New in v1.1.8: The DataBridge Evolution 💣
 
 ### 🌉 **MQ-DBX: The Data Bridge**
@@ -132,7 +170,12 @@ fn main() -> anyhow::Result<()> {
 
 ## 🎯 Roadmap
 
-### Version 1.2.0 (Coming Soon!)
+### Version 1.2.0 ✅ (Current)
+- [x] Wikipedia-scale markdown compression tests and benchmarks.
+- [x] Enhanced `uni-encode` token dictionary (H3/H4/H5 headers, numbered/bulleted lists, blockquotes).
+- [x] `scripts/manage.sh` for clean/build/test/release/version management.
+
+### Version 1.3.0 (Coming Soon!)
 - [ ] Real-time streaming DataBridge for SurrealDB.
 - [ ] Multi-language Ayanese reasoning core.
 - [ ] GPU-accelerated wave interference encoding.
