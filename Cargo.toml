@@ -1,6 +1,6 @@
 [package]
 name = "marqant"
-version = "1.1.8"
+version = "1.2.0"
 edition = "2021"
 authors = ["8bit-wraith", "Claude", "8b-is Team"]
 license = "MIT"
@@ -41,4 +41,8 @@ path = "src/bin/demon_compressor.rs"
 [[bin]]
 name = "angel_decompressor"
 path = "src/bin/angel_decompressor.rs"
+
+[[bin]]
+name = "hutter_arena"
+path = "src/bin/hutter_arena.rs"
 

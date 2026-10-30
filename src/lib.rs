@@ -43,6 +43,7 @@ pub mod bridge;
 pub mod data_bridge;
 pub mod digest_state;
 pub mod dns;
+pub mod hutter_demon;
 pub mod log_summarizer;
 pub mod mem8_bridge;
 pub mod novelty;
