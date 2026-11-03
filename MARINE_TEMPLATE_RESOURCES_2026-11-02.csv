@@ -1,0 +1,5 @@
+process,wall_ns,peak_rss_kib,exit_code
+lattice_compress,11228110288,345360,0
+template_compress,13131372622,442244,0
+lattice_decode,2778539570,310844,0
+template_decode,2712440503,303444,0
